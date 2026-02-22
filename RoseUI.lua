@@ -1202,9 +1202,12 @@ function RoseUI:CreateWindow(options)
             end
             
             -- Close dropdown if scrolling
-            page:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-                if isOpen then toggleDropdown() end
-            end)
+            local scrollFrame = dropFrame:FindFirstAncestorWhichIsA("ScrollingFrame")
+            if scrollFrame then
+                scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+                    if isOpen then toggleDropdown() end
+                end)
+            end
 
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
@@ -1907,4 +1910,3 @@ function RoseUI:CreateWindow(options)
 end
 
 return RoseUI
-
