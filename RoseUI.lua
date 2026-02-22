@@ -1080,7 +1080,7 @@ function RoseUI:CreateWindow(options)
             local defaultParams = dOptions.Default or optionsList[1]
             local cb = dOptions.Callback or function() end
             
-            GLOBAL_ZINDEX = GLOBAL_ZINDEX - 10 -- FIXED: Descending ZIndex ensures Dropdowns overlap elements below them
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10 -- FIXED: Descending ZIndex ensures Dropdowns overlap elements below them
             local currentZ = GLOBAL_ZINDEX
 
             local dropFrame = Instance.new("Frame")
@@ -1267,7 +1267,7 @@ function RoseUI:CreateWindow(options)
             local defaultColor = cpOptions.Default or Color3.fromRGB(255, 255, 255)
             local cb = cpOptions.Callback or function() end
             
-            GLOBAL_ZINDEX = GLOBAL_ZINDEX - 10 -- FIXED: Descending ZIndex
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
             local currentZ = GLOBAL_ZINDEX
 
             local cpFrame = Instance.new("Frame")
@@ -1907,3 +1907,4 @@ function RoseUI:CreateWindow(options)
 end
 
 return RoseUI
+
