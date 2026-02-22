@@ -1894,8 +1894,6 @@ function RoseUI:CreateWindow(options)
     end)
 
     return WindowObj
-    return WindowObj
 end
 
 return RoseUI
-
