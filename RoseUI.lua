@@ -1074,13 +1074,13 @@ function RoseUI:CreateWindow(options)
         end
 
         -- 4. FANCY DROPDOWN (Premium Animations)
-        function TabObj:AddDropdown(dropOptions)
-            local dName = dropOptions.Name or "Dropdown"
-            local optionsList = dropOptions.Options or {}
-            local defaultParams = dropOptions.Default or optionsList[1] or ""
-            local cb = dropOptions.Callback or function() end
+        function TabObj:AddDropdown(dOptions)
+            local dName = dOptions.Name or "Dropdown"
+            local optionsList = dOptions.Options or {"Option 1", "Option 2"}
+            local defaultParams = dOptions.Default or optionsList[1]
+            local cb = dOptions.Callback or function() end
             
-            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10 
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX - 10 -- FIXED: Descending ZIndex ensures Dropdowns overlap elements below them
             local currentZ = GLOBAL_ZINDEX
 
             local dropFrame = Instance.new("Frame")
@@ -1257,7 +1257,7 @@ function RoseUI:CreateWindow(options)
             local defaultColor = cpOptions.Default or Color3.fromRGB(255, 255, 255)
             local cb = cpOptions.Callback or function() end
             
-            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10 
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX - 10 -- FIXED: Descending ZIndex
             local currentZ = GLOBAL_ZINDEX
 
             local cpFrame = Instance.new("Frame")
