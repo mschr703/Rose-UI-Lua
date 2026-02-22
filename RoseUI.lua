@@ -1140,7 +1140,7 @@ function RoseUI:CreateWindow(options)
             dropMenuBg.ZIndex = currentZ + 50
             dropMenuBg.ClipsDescendants = true -- Verhindert dass buttons rausgucken
             dropMenuBg.Visible = false
-            dropMenuBg.Parent = dropFrame
+            dropMenuBg.Parent = pageContainer
             Instance.new("UICorner", dropMenuBg).CornerRadius = UDim.new(0, 4)
             
             local dropMenuStroke = Instance.new("UIStroke")
@@ -1183,18 +1183,28 @@ function RoseUI:CreateWindow(options)
                 isOpen = not isOpen
                 if isOpen then
                     dropMenuBg.Visible = true
+                    
+                    -- Calculate absolute position and size
+                    dropMenuBg.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)
+                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X - pageContainer.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y - pageContainer.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
+                    
                     tweenService:Create(arrow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 180, TextColor3 = TEXT_COLOR}):Play()
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0}):Play()
-                    tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.5, -15, 0, math.clamp(listHeight, 10, 150))}):Play()
+                    tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, math.clamp(listHeight, 10, 150))}):Play()
                 else
                     tweenService:Create(arrow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 0, TextColor3 = Color3.fromRGB(150, 120, 130)}):Play()
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0.8}):Play()
-                    local clsTween = tweenService:Create(dropMenuBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0.5, -15, 0, 0)})
+                    local clsTween = tweenService:Create(dropMenuBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)})
                     clsTween:Play()
                     clsTween.Completed:Wait()
                     if not isOpen then dropMenuBg.Visible = false end -- Check falls user schnell double clickt
                 end
             end
+            
+            -- Close dropdown if scrolling
+            page:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+                if isOpen then toggleDropdown() end
+            end)
 
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
@@ -1231,7 +1241,7 @@ function RoseUI:CreateWindow(options)
                 end
                 
                 if isOpen then
-                    tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0.5, -15, 0, math.clamp(listHeight, 10, 150))}):Play()
+                    tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, math.clamp(listHeight, 10, 150))}):Play()
                 end
             end
             
