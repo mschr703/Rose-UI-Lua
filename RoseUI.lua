@@ -1898,3 +1898,4 @@ function RoseUI:CreateWindow(options)
 end
 
 return RoseUI
+
