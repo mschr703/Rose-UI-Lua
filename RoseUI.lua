@@ -1136,8 +1136,8 @@ function RoseUI:CreateWindow(options)
             local dropMenuBg = Instance.new("Frame")
             dropMenuBg.Size = UDim2.new(0.5, -15, 0, 0) -- Startet bei 0 size Y
             dropMenuBg.Position = UDim2.new(0.5, 5, 1, 5)
-            dropMenuBg.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
-            dropMenuBg.ZIndex = currentZ + 5
+            dropMenuBg.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
+            dropMenuBg.ZIndex = currentZ + 50
             dropMenuBg.ClipsDescendants = true -- Verhindert dass buttons rausgucken
             dropMenuBg.Visible = false
             dropMenuBg.Parent = dropFrame
@@ -1211,7 +1211,7 @@ function RoseUI:CreateWindow(options)
                     local optBtn = Instance.new("TextButton")
                     optBtn.Size = UDim2.new(1, -6, 0, 25)
                     optBtn.BackgroundColor3 = Color3.fromRGB(40, 25, 30)
-                    optBtn.BackgroundTransparency = 1
+                    optBtn.BackgroundTransparency = 0
                     optBtn.Text = "  " .. optText
                     optBtn.TextColor3 = TEXT_COLOR
                     optBtn.Font = Enum.Font.Gotham
