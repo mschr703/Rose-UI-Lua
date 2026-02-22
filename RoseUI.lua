@@ -734,6 +734,7 @@ function RoseUI:CreateWindow(options)
             local tName = toggleOptions.Name or "Toggle"
             local cb = toggleOptions.Callback or function() end
             local defaultParams = toggleOptions.Default or false
+            local isToggled = defaultParams
             
             local toggleFrame = Instance.new("Frame")
             toggleFrame.Size = UDim2.new(1, -10, 0, 42)
@@ -777,7 +778,7 @@ function RoseUI:CreateWindow(options)
             outline.Thickness = 1
             outline.Parent = toggleBtn
 
-            
+            local currentBinds = {}
             local ToggleAPI = {
                 Name = tName,
                 Type = "Toggle",

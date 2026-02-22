@@ -1,5 +1,5 @@
 # RoseUI V3 - Premium Roblox UI Library
-An elegant, modern, and translucent UI Library for Roblox Exploits, designed to look sleek and minimalistic (inspired by premium hubs like Solix).
+An elegant, modern, and translucent UI Library for Roblox, designed to look sleek and minimalistic.
 
 ![Preview](https://i.imgur.com/placeholder.png)
 
