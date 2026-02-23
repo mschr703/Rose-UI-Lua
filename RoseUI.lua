@@ -1160,7 +1160,7 @@ function RoseUI:CreateWindow(options)
             dropMenu.BorderSizePixel = 0
             dropMenu.ScrollBarThickness = 3
             dropMenu.ScrollBarImageColor3 = HEADER_COLOR
-            dropMenu.ZIndex = currentZ + 6
+            dropMenu.ZIndex = currentZ + 51
             dropMenu.Parent = dropMenuBg
             
             local dropLayout = Instance.new("UIListLayout")
@@ -1234,7 +1234,7 @@ function RoseUI:CreateWindow(options)
                     optBtn.Font = Enum.Font.Gotham
                     optBtn.TextSize = 11
                     optBtn.TextXAlignment = Enum.TextXAlignment.Left
-                    optBtn.ZIndex = currentZ + 7
+                    optBtn.ZIndex = currentZ + 52
                     optBtn.Parent = dropMenu
                     Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 2)
                     
@@ -1919,4 +1919,3 @@ function RoseUI:CreateWindow(options)
 end
 
 return RoseUI
-
