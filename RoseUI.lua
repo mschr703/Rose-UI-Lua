@@ -1412,6 +1412,18 @@ function RoseUI:CreateWindow(options)
                 Type = "SearchDropdown",
                 Value = selectedItems
             }
+            
+            local refreshOptions = function() end
+            
+            function DropdownAPI:Refresh(newOptions, newSelected)
+                if newOptions then optionsList = newOptions end
+                if newSelected then 
+                    selectedItems = type(newSelected) == "table" and newSelected or {newSelected}
+                    DropdownAPI.Value = selectedItems
+                    updateBtnText()
+                end
+                refreshOptions(searchBox.Text)
+            end
 
             local function toggleDropdown()
                 isOpen = not isOpen
@@ -1443,7 +1455,7 @@ function RoseUI:CreateWindow(options)
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
 
-            local function refreshOptions(filterText)
+            refreshOptions = function(filterText)
                 for _, child in pairs(dropMenu:GetChildren()) do
                     if child:IsA("TextButton") then child:Destroy() end
                 end
@@ -1912,7 +1924,7 @@ function RoseUI:CreateWindow(options)
             
             tBox:GetPropertyChangedSignal("Text"):Connect(function()
                 TextboxAPI.Value = tBox.Text
-                cb(tBox.Text)
+                cb(tBox.Text, false)
             end)
             
             local suggestBg
@@ -1981,7 +1993,9 @@ function RoseUI:CreateWindow(options)
                             end)
                             
                             btn.MouseButton1Click:Connect(function()
-                                TextboxAPI:Set(opt)
+                                cb(opt, true)
+                                tBox.Text = "" 
+                                tBox:ReleaseFocus()
                             end)
                         end
                     end
