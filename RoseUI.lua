@@ -697,6 +697,7 @@ function RoseUI:CreateWindow(options)
             proxyMethod("AddLabel")
             proxyMethod("AddTextbox")
             proxyMethod("AddKeybind")
+            proxyMethod("AddInventoryGrid")
             
             return SectionAPI
         end
@@ -1279,6 +1280,107 @@ function RoseUI:CreateWindow(options)
             end
             table.insert(WindowObj.Elements, DropdownAPI)
             return DropdownAPI
+        end
+
+        function TabObj:AddInventoryGrid(invOptions)
+            local iName = invOptions.Name or "Inventory"
+            local cb = invOptions.OnSell or function() end
+            
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
+            local currentZ = GLOBAL_ZINDEX
+
+            local gridContainer = Instance.new("Frame")
+            gridContainer.Size = UDim2.new(1, -10, 0, 30)
+            gridContainer.BackgroundColor3 = CARD_COLOR
+            gridContainer.ZIndex = currentZ
+            gridContainer.Parent = page
+            Instance.new("UICorner", gridContainer).CornerRadius = UDim.new(0, 6)
+            
+            local listLayout = Instance.new("UIListLayout")
+            listLayout.Parent = gridContainer
+            listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            listLayout.Padding = UDim.new(0, 4)
+            listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            
+            local padding = Instance.new("UIPadding")
+            padding.Parent = gridContainer
+            padding.PaddingTop = UDim.new(0, 5)
+            padding.PaddingBottom = UDim.new(0, 5)
+            
+            local InvAPI = {
+                Name = iName,
+                Type = "InventoryGrid"
+            }
+            
+            function InvAPI:Refresh(newList)
+                for _, child in pairs(gridContainer:GetChildren()) do
+                    if child:IsA("Frame") then child:Destroy() end
+                end
+                
+                local count = 0
+                for _, itemData in ipairs(newList) do
+                    count = count + 1
+                    local itemFrame = Instance.new("Frame")
+                    itemFrame.Size = UDim2.new(1, -10, 0, 30)
+                    itemFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
+                    itemFrame.ZIndex = currentZ + 1
+                    itemFrame.Parent = gridContainer
+                    Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0, 4)
+                    
+                    local nameLbl = Instance.new("TextLabel")
+                    nameLbl.Size = UDim2.new(0.4, 0, 1, 0)
+                    nameLbl.Position = UDim2.new(0, 10, 0, 0)
+                    nameLbl.BackgroundTransparency = 1
+                    nameLbl.Text = itemData.Name or "Unknown"
+                    nameLbl.TextColor3 = TEXT_COLOR
+                    nameLbl.Font = Enum.Font.GothamSemibold
+                    nameLbl.TextSize = 12
+                    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+                    nameLbl.ZIndex = currentZ + 2
+                    nameLbl.Parent = itemFrame
+                    
+                    local valLbl = Instance.new("TextLabel")
+                    valLbl.Size = UDim2.new(0.4, -10, 1, 0)
+                    valLbl.Position = UDim2.new(0.4, 0, 0, 0)
+                    valLbl.BackgroundTransparency = 1
+                    valLbl.Text = (itemData.Rank or "") .. " | $" .. tostring(itemData.Value or "0")
+                    if itemData.Rank == "Divine" or itemData.Rank == "GOD" or itemData.Rank == "???" then
+                        valLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+                    else
+                        valLbl.TextColor3 = Color3.fromRGB(150, 200, 150)
+                    end
+                    valLbl.Font = Enum.Font.Gotham
+                    valLbl.TextSize = 11
+                    valLbl.TextXAlignment = Enum.TextXAlignment.Left
+                    valLbl.ZIndex = currentZ + 2
+                    valLbl.Parent = itemFrame
+                    
+                    local sellBtn = Instance.new("TextButton")
+                    sellBtn.Size = UDim2.new(0, 50, 0, 22)
+                    sellBtn.Position = UDim2.new(1, -55, 0.5, -11)
+                    sellBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 70)
+                    sellBtn.Text = "Sell"
+                    sellBtn.TextColor3 = Color3.new(1,1,1)
+                    sellBtn.Font = Enum.Font.GothamBold
+                    sellBtn.TextSize = 11
+                    sellBtn.ZIndex = currentZ + 3
+                    sellBtn.Parent = itemFrame
+                    Instance.new("UICorner", sellBtn).CornerRadius = UDim.new(0, 4)
+                    
+                    local btnStroke = Instance.new("UIStroke")
+                    btnStroke.Color = Color3.fromRGB(255, 100, 100)
+                    btnStroke.Transparency = 0.5
+                    btnStroke.Parent = sellBtn
+                    
+                    sellBtn.MouseButton1Click:Connect(function()
+                        cb(itemData)
+                    end)
+                end
+                
+                gridContainer.Size = UDim2.new(1, -10, 0, (count * 34) + 10)
+            end
+            
+            return InvAPI
         end
 
         -- 4.5. SEARCH MULTI-DROPDOWN
