@@ -1349,7 +1349,7 @@ function RoseUI:CreateWindow(options)
             dropMenuBg.ZIndex = currentZ + 50
             dropMenuBg.ClipsDescendants = true
             dropMenuBg.Visible = false
-            dropMenuBg.Parent = pageContainer
+            dropMenuBg.Parent = page
             Instance.new("UICorner", dropMenuBg).CornerRadius = UDim.new(0, 4)
             
             local dropMenuStroke = Instance.new("UIStroke")
@@ -1439,7 +1439,7 @@ function RoseUI:CreateWindow(options)
                 isOpen = not isOpen
                 if isOpen then
                     dropMenuBg.Visible = true
-                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X - pageContainer.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y - pageContainer.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
+                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X - page.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y - page.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
                     arrow.Text = "▲"
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0.2}):Play()
                     
