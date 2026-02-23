@@ -1546,6 +1546,132 @@ function RoseUI:CreateWindow(options)
             return DropdownAPI
         end
 
+        -- 4.6. INTERACTIVE TARGET LIST (With Click-to-Remove & Clear All)
+        function TabObj:AddTargetList(lOptions)
+            local lName = lOptions.Name or "Target List"
+            local optionsList = lOptions.Options or {}
+            local cb = lOptions.Callback or function() end
+            
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
+            local currentZ = GLOBAL_ZINDEX
+
+            local listFrame = Instance.new("Frame")
+            listFrame.Size = UDim2.new(1, -10, 0, 120) -- Fixed vertical height for the list container
+            listFrame.BackgroundColor3 = CARD_COLOR
+            listFrame.ZIndex = currentZ
+            listFrame.Parent = page
+            Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0, 6)
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.5, 0, 0, 30)
+            label.Position = UDim2.new(0, 15, 0, 5)
+            label.BackgroundTransparency = 1
+            label.Text = lName
+            label.TextColor3 = TEXT_COLOR
+            label.TextSize = 13
+            label.Font = Enum.Font.GothamSemibold
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.ZIndex = currentZ + 1
+            label.Parent = listFrame
+
+            local clearBtn = Instance.new("TextButton")
+            clearBtn.Size = UDim2.new(0, 70, 0, 22)
+            clearBtn.Position = UDim2.new(1, -85, 0, 9)
+            clearBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 70)
+            clearBtn.BackgroundTransparency = 0.8
+            clearBtn.Text = "Clear All"
+            clearBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+            clearBtn.Font = Enum.Font.GothamBold
+            clearBtn.TextSize = 11
+            clearBtn.ZIndex = currentZ + 1
+            clearBtn.Parent = listFrame
+            Instance.new("UICorner", clearBtn).CornerRadius = UDim.new(0, 4)
+            local outline = Instance.new("UIStroke")
+            outline.Color = Color3.fromRGB(255, 100, 100)
+            outline.Transparency = 0.5
+            outline.Parent = clearBtn
+
+            clearBtn.MouseEnter:Connect(function() tweenService:Create(clearBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.5}):Play() end)
+            clearBtn.MouseLeave:Connect(function() tweenService:Create(clearBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.8}):Play() end)
+
+            local scrollBg = Instance.new("Frame")
+            scrollBg.Size = UDim2.new(1, -20, 1, -45)
+            scrollBg.Position = UDim2.new(0, 10, 0, 35)
+            scrollBg.BackgroundColor3 = Color3.fromRGB(25, 12, 18)
+            scrollBg.ZIndex = currentZ + 1
+            scrollBg.Parent = listFrame
+            Instance.new("UICorner", scrollBg).CornerRadius = UDim.new(0, 4)
+
+            local scrollMenu = Instance.new("ScrollingFrame")
+            scrollMenu.Size = UDim2.new(1, -4, 1, -4)
+            scrollMenu.Position = UDim2.new(0, 2, 0, 2)
+            scrollMenu.BackgroundTransparency = 1
+            scrollMenu.BorderSizePixel = 0
+            scrollMenu.ScrollBarThickness = 3
+            scrollMenu.ScrollBarImageColor3 = HEADER_COLOR
+            scrollMenu.ZIndex = currentZ + 2
+            scrollMenu.Parent = scrollBg
+            
+            local listLayout = Instance.new("UIListLayout")
+            listLayout.Parent = scrollMenu
+            listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            listLayout.Padding = UDim.new(0, 2)
+
+            local ListAPI = {
+                Name = lName,
+                Type = "TargetList",
+                Value = optionsList
+            }
+
+            local function refreshList()
+                for _, child in pairs(scrollMenu:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
+                end
+                
+                local count = 0
+                for i, targetName in ipairs(ListAPI.Value) do
+                    count = count + 1
+                    local optBtn = Instance.new("TextButton")
+                    optBtn.Size = UDim2.new(1, -6, 0, 25)
+                    optBtn.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
+                    optBtn.Text = "  ✕  " .. targetName
+                    optBtn.TextColor3 = TEXT_COLOR
+                    optBtn.Font = Enum.Font.Gotham
+                    optBtn.TextSize = 12
+                    optBtn.TextXAlignment = Enum.TextXAlignment.Left
+                    optBtn.ZIndex = currentZ + 3
+                    optBtn.Parent = scrollMenu
+                    Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 4)
+                    
+                    optBtn.MouseEnter:Connect(function() tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(65, 35, 45), TextColor3 = Color3.fromRGB(255, 100, 100)}):Play() end)
+                    optBtn.MouseLeave:Connect(function() tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(45, 25, 35), TextColor3 = TEXT_COLOR}):Play() end)
+
+                    optBtn.MouseButton1Click:Connect(function()
+                        table.remove(ListAPI.Value, i)
+                        refreshList()
+                        cb(ListAPI.Value)
+                    end)
+                end
+                
+                scrollMenu.CanvasSize = UDim2.new(0, 0, 0, count * 27)
+            end
+
+            clearBtn.MouseButton1Click:Connect(function()
+                ListAPI.Value = {}
+                refreshList()
+                cb(ListAPI.Value)
+            end)
+
+            function ListAPI:Refresh(newList)
+                ListAPI.Value = newList
+                refreshList()
+            end
+
+            refreshList()
+            table.insert(WindowObj.Elements, ListAPI)
+            return ListAPI
+        end
+
         -- 5. COLOR PICKER (2D Wheel / Hex Style)
         function TabObj:AddColorPicker(cpOptions)
             local cpName = cpOptions.Name or "Color Picker"
