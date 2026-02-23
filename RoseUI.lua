@@ -2008,12 +2008,14 @@ function RoseUI:CreateWindow(options)
                                 tweenService:Create(btn, TweenInfo.new(0.1), {TextColor3 = TEXT_COLOR}):Play() 
                             end)
                             
-                            btn.MouseButton1Click:Connect(function()
-                                isSelectingOption = true
-                                cb(opt, true)
-                                tBox.Text = "" 
-                                tBox:CaptureFocus()
-                                task.delay(0.15, function() isSelectingOption = false end)
+                            btn.InputBegan:Connect(function(input)
+                                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                                    isSelectingOption = true
+                                    cb(opt, true)
+                                    tBox.Text = "" 
+                                    tBox:CaptureFocus()
+                                    task.delay(0.15, function() isSelectingOption = false end)
+                                end
                             end)
                         end
                     end
