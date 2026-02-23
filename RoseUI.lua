@@ -1434,6 +1434,15 @@ function RoseUI:CreateWindow(options)
                 end
                 refreshOptions(searchBox.Text)
             end
+            
+            function DropdownAPI:Set(val)
+                local newSel = type(val) == "table" and val or {val}
+                selectedItems = newSel
+                DropdownAPI.Value = selectedItems
+                updateBtnText()
+                refreshOptions(searchBox.Text)
+                cb(newSel)
+            end
 
             local function toggleDropdown()
                 isOpen = not isOpen
