@@ -1505,8 +1505,32 @@ function RoseUI:CreateWindow(options)
                             if idx then
                                 table.remove(selectedItems, idx)
                             else
-                                table.insert(selectedItems, optText)
+                                -- Mutually Exclusive Check for "[ All ... ]" tags
+                                local isAllTag = string.match(optText, "^%[%s*All")
+                                if isAllTag then
+                                    -- If they clicked "All", clear everything else
+                                    selectedItems = {optText}
+                                else
+                                    -- If they clicked a specific item, remove any "All" tags currently active
+                                    for i = #selectedItems, 1, -1 do
+                                        if string.match(selectedItems[i], "^%[%s*All") then
+                                            table.remove(selectedItems, i)
+                                        end
+                                    end
+                                    table.insert(selectedItems, optText)
+                                end
                             end
+                            
+                            -- If list is empty, default back to the "All" tag if one exists in options
+                            if #selectedItems == 0 then
+                                for _, opt in ipairs(optionsList) do
+                                    if string.match(opt, "^%[%s*All") then
+                                        table.insert(selectedItems, opt)
+                                        break
+                                    end
+                                end
+                            end
+
                             DropdownAPI.Value = selectedItems
                             updateBtnText()
                             refreshOptions(searchBox.Text) -- Redraw to update colors
