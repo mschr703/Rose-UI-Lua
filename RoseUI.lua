@@ -957,6 +957,7 @@ function RoseUI:CreateWindow(options)
                 end
             end)
             
+            ToggleAPI.Instance = toggleFrame
             table.insert(WindowObj.Elements, ToggleAPI)
             return ToggleAPI
         end
