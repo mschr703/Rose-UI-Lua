@@ -1899,6 +1899,17 @@ function RoseUI:CreateWindow(options)
                 cb(val)
             end
             
+            local refreshSuggestions = function() end
+            
+            function TextboxAPI:Refresh(newOptions)
+                if type(newOptions) == "table" then
+                    optionsList = newOptions
+                    if tBox:IsFocused() then
+                        refreshSuggestions(tBox.Text)
+                    end
+                end
+            end
+            
             tBox:GetPropertyChangedSignal("Text"):Connect(function()
                 TextboxAPI.Value = tBox.Text
                 cb(tBox.Text)
@@ -1939,7 +1950,7 @@ function RoseUI:CreateWindow(options)
                 suggestLayout.Parent = suggestMenu
                 suggestLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-                local function refreshSuggestions(filter)
+                refreshSuggestions = function(filter)
                     for _, child in pairs(suggestMenu:GetChildren()) do
                         if child:IsA("TextButton") then child:Destroy() end
                     end
