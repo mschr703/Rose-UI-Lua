@@ -1270,6 +1270,252 @@ function RoseUI:CreateWindow(options)
             return DropdownAPI
         end
 
+        -- 4.5. SEARCH MULTI-DROPDOWN
+        function TabObj:AddSearchDropdown(dOptions)
+            local dName = dOptions.Name or "Search Dropdown"
+            local optionsList = dOptions.Options or {}
+            local defaultParams = dOptions.Default or {} -- Now expects a table of selected strings
+            local cb = dOptions.Callback or function() end
+            
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
+            local currentZ = GLOBAL_ZINDEX
+
+            local dropFrame = Instance.new("Frame")
+            dropFrame.Size = UDim2.new(1, -10, 0, 42)
+            dropFrame.BackgroundColor3 = CARD_COLOR
+            dropFrame.ZIndex = currentZ
+            dropFrame.Parent = page
+            Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 6)
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.4, 0, 1, 0)
+            label.Position = UDim2.new(0, 15, 0, 0)
+            label.BackgroundTransparency = 1
+            label.Text = dName
+            label.TextColor3 = TEXT_COLOR
+            label.TextSize = 13
+            label.Font = Enum.Font.GothamSemibold
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.ZIndex = currentZ + 1
+            label.Parent = dropFrame
+
+            -- Display Button shows selected items (e.g. "Egg 1, Egg 2")
+            local dropBtn = Instance.new("TextButton")
+            dropBtn.Size = UDim2.new(0.5, -15, 0, 30)
+            dropBtn.Position = UDim2.new(0.5, 5, 0.5, -15)
+            dropBtn.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+            dropBtn.Text = "  Select..."
+            dropBtn.TextTruncate = Enum.TextTruncate.AtEnd
+            dropBtn.TextColor3 = Color3.fromRGB(200, 180, 190)
+            dropBtn.Font = Enum.Font.Gotham
+            dropBtn.TextSize = 12
+            dropBtn.TextXAlignment = Enum.TextXAlignment.Left
+            dropBtn.ZIndex = currentZ + 1
+            dropBtn.Parent = dropFrame
+            Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0, 4)
+            
+            local outline = Instance.new("UIStroke")
+            outline.Color = HEADER_COLOR
+            outline.Transparency = 0.8
+            outline.Thickness = 1
+            outline.Parent = dropBtn
+
+            local arrow = Instance.new("TextLabel")
+            arrow.Size = UDim2.new(0, 20, 1, 0)
+            arrow.Position = UDim2.new(1, -25, 0, 0)
+            arrow.BackgroundTransparency = 1
+            arrow.Text = "▼"
+            arrow.TextColor3 = Color3.fromRGB(150, 120, 130)
+            arrow.TextSize = 10
+            arrow.Font = Enum.Font.GothamBold
+            arrow.ZIndex = currentZ + 2
+            arrow.Parent = dropBtn
+
+            local dropMenuBg = Instance.new("Frame")
+            dropMenuBg.Size = UDim2.new(0.5, -15, 0, 0)
+            dropMenuBg.Position = UDim2.new(0.5, 5, 1, 5)
+            dropMenuBg.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
+            dropMenuBg.ZIndex = currentZ + 50
+            dropMenuBg.ClipsDescendants = true
+            dropMenuBg.Visible = false
+            dropMenuBg.Parent = pageContainer
+            Instance.new("UICorner", dropMenuBg).CornerRadius = UDim.new(0, 4)
+            
+            local dropMenuStroke = Instance.new("UIStroke")
+            dropMenuStroke.Color = HEADER_COLOR
+            dropMenuStroke.Transparency = 0.5
+            dropMenuStroke.Thickness = 1
+            dropMenuStroke.Parent = dropMenuBg
+
+            -- Search Box inside Dropdown
+            local searchBoxBg = Instance.new("Frame")
+            searchBoxBg.Size = UDim2.new(1, -10, 0, 25)
+            searchBoxBg.Position = UDim2.new(0, 5, 0, 5)
+            searchBoxBg.BackgroundColor3 = Color3.fromRGB(25, 12, 18)
+            searchBoxBg.ZIndex = currentZ + 51
+            searchBoxBg.Parent = dropMenuBg
+            Instance.new("UICorner", searchBoxBg).CornerRadius = UDim.new(0, 4)
+
+            local searchBox = Instance.new("TextBox")
+            searchBox.Size = UDim2.new(1, -10, 1, 0)
+            searchBox.Position = UDim2.new(0, 5, 0, 0)
+            searchBox.BackgroundTransparency = 1
+            searchBox.PlaceholderText = "Search..."
+            searchBox.Text = ""
+            searchBox.TextColor3 = TEXT_COLOR
+            searchBox.ClearTextOnFocus = false
+            searchBox.PlaceholderColor3 = Color3.fromRGB(150, 120, 130)
+            searchBox.Font = Enum.Font.Gotham
+            searchBox.TextSize = 11
+            searchBox.ZIndex = currentZ + 52
+            searchBox.TextXAlignment = Enum.TextXAlignment.Left
+            searchBox.Parent = searchBoxBg
+
+            local dropMenu = Instance.new("ScrollingFrame")
+            dropMenu.Size = UDim2.new(1, -4, 1, -34)
+            dropMenu.Position = UDim2.new(0, 2, 0, 32)
+            dropMenu.BackgroundTransparency = 1
+            dropMenu.BorderSizePixel = 0
+            dropMenu.ScrollBarThickness = 3
+            dropMenu.ScrollBarImageColor3 = HEADER_COLOR
+            dropMenu.ZIndex = currentZ + 51
+            dropMenu.Parent = dropMenuBg
+            
+            local dropLayout = Instance.new("UIListLayout")
+            dropLayout.Parent = dropMenu
+            dropLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local isOpen = false
+            local selectedItems = type(defaultParams) == "table" and defaultParams or {}
+            if type(selectedItems) ~= "table" then selectedItems = {selectedItems} end
+
+            local function updateBtnText()
+                if #selectedItems == 0 then
+                    dropBtn.Text = "  Select..."
+                else
+                    dropBtn.Text = "  " .. table.concat(selectedItems, ", ")
+                end
+            end
+            updateBtnText()
+
+            local DropdownAPI = {
+                Name = dName,
+                Type = "SearchDropdown",
+                Value = selectedItems
+            }
+
+            local function toggleDropdown()
+                isOpen = not isOpen
+                if isOpen then
+                    dropMenuBg.Visible = true
+                    dropMenuBg.Position = UDim2.new(0, dropFrame.AbsolutePosition.X + dropBtn.Position.X.Offset, 0, dropFrame.AbsolutePosition.Y + dropFrame.AbsoluteSize.Y + 5)
+                    arrow.Text = "▲"
+                    tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0.2}):Play()
+                    
+                    local maxH = math.clamp((#optionsList * 25) + 36, 60, 200)
+                    tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, maxH)}):Play()
+                else
+                    arrow.Text = "▼"
+                    tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0.8}):Play()
+                    local clsTween = tweenService:Create(dropMenuBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)})
+                    clsTween:Play()
+                    clsTween.Completed:Wait()
+                    if not isOpen then dropMenuBg.Visible = false end 
+                end
+            end
+            
+            local scrollFrame = dropFrame:FindFirstAncestorWhichIsA("ScrollingFrame")
+            if scrollFrame then
+                scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+                    if isOpen then toggleDropdown() end
+                end)
+            end
+
+            dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
+            dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
+
+            local function refreshOptions(filterText)
+                for _, child in pairs(dropMenu:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
+                end
+                
+                local displayedCount = 0
+                for _, optText in pairs(optionsList) do
+                    if filterText == "" or string.find(string.lower(optText), string.lower(filterText), 1, true) then
+                        displayedCount = displayedCount + 1
+                        local isSel = table.find(selectedItems, optText) ~= nil
+
+                        local optBtn = Instance.new("TextButton")
+                        optBtn.Size = UDim2.new(1, -6, 0, 25)
+                        optBtn.BackgroundColor3 = isSel and HEADER_COLOR or Color3.fromRGB(40, 25, 30)
+                        optBtn.BackgroundTransparency = isSel and 0.5 or 0
+                        optBtn.Text = "  " .. optText
+                        optBtn.TextColor3 = isSel and Color3.new(1,1,1) or TEXT_COLOR
+                        optBtn.Font = Enum.Font.Gotham
+                        optBtn.TextSize = 11
+                        optBtn.TextXAlignment = Enum.TextXAlignment.Left
+                        optBtn.ZIndex = currentZ + 52
+                        optBtn.Parent = dropMenu
+                        Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 2)
+                        
+                        optBtn.MouseEnter:Connect(function() 
+                            if not table.find(selectedItems, optText) then
+                                tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundTransparency = 0.2, TextColor3 = HEADER_COLOR}):Play() 
+                            end
+                        end)
+                        optBtn.MouseLeave:Connect(function() 
+                            if not table.find(selectedItems, optText) then
+                                tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundTransparency = 0, TextColor3 = TEXT_COLOR}):Play() 
+                            end
+                        end)
+
+                        optBtn.MouseButton1Click:Connect(function()
+                            local idx = table.find(selectedItems, optText)
+                            if idx then
+                                table.remove(selectedItems, idx)
+                            else
+                                table.insert(selectedItems, optText)
+                            end
+                            DropdownAPI.Value = selectedItems
+                            updateBtnText()
+                            refreshOptions(searchBox.Text) -- Redraw to update colors
+                            cb(selectedItems)
+                        end)
+                    end
+                end
+                
+                local listHeight = displayedCount * 25
+                dropMenu.CanvasSize = UDim2.new(0, 0, 0, listHeight)
+                
+                if isOpen then
+                    local maxH = math.clamp(listHeight + 36, 60, 200)
+                    tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, maxH)}):Play()
+                end
+            end
+            
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                refreshOptions(searchBox.Text)
+            end)
+
+            refreshOptions("")
+            dropBtn.MouseButton1Click:Connect(toggleDropdown)
+            
+            function DropdownAPI:Refresh(newList, newDefault)
+                optionsList = newList
+                -- Clean up selected items that no longer exist
+                local validSelections = {}
+                for _, sel in pairs(selectedItems) do
+                    if table.find(newList, sel) then table.insert(validSelections, sel) end
+                end
+                selectedItems = validSelections
+                DropdownAPI.Value = selectedItems
+                updateBtnText()
+                refreshOptions(searchBox.Text)
+            end
+            table.insert(WindowObj.Elements, DropdownAPI)
+            return DropdownAPI
+        end
+
         -- 5. COLOR PICKER (2D Wheel / Hex Style)
         function TabObj:AddColorPicker(cpOptions)
             local cpName = cpOptions.Name or "Color Picker"
@@ -1919,3 +2165,4 @@ function RoseUI:CreateWindow(options)
 end
 
 return RoseUI
+
