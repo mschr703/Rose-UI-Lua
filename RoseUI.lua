@@ -1921,6 +1921,7 @@ function RoseUI:CreateWindow(options)
             end
             
             local refreshSuggestions = function() end
+            local isSelectingOption = false
             
             function TextboxAPI:Refresh(newOptions)
                 if type(newOptions) == "table" then
@@ -2008,9 +2009,11 @@ function RoseUI:CreateWindow(options)
                             end)
                             
                             btn.MouseButton1Click:Connect(function()
+                                isSelectingOption = true
                                 cb(opt, true)
                                 tBox.Text = "" 
-                                tBox:ReleaseFocus()
+                                tBox:CaptureFocus()
+                                task.delay(0.15, function() isSelectingOption = false end)
                             end)
                         end
                     end
@@ -2036,6 +2039,7 @@ function RoseUI:CreateWindow(options)
                 tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
                 if suggestBg then
                     task.delay(0.1, function() -- Minor delay to allow clicks to register
+                        if isSelectingOption then return end
                         local cls = tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, suggestBg.Size.X.Offset, 0, 0)})
                         cls:Play()
                         cls.Completed:Connect(function() suggestBg.Visible = false end)
