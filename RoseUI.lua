@@ -2012,6 +2012,7 @@ function RoseUI:CreateWindow(options)
                                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                                     isSelectingOption = true
                                     cb(opt, true)
+                                    preventNextRefresh = true
                                     tBox.Text = "" 
                                     tBox:CaptureFocus()
                                     task.delay(0.15, function() isSelectingOption = false end)
@@ -2025,12 +2026,18 @@ function RoseUI:CreateWindow(options)
                     tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, maxWidth, 0, h)}):Play()
                 end
 
+                local preventNextRefresh = false
+
                 tBox.Focused:Connect(function()
                     suggestBg.Visible = true
                     refreshSuggestions(tBox.Text)
                 end)
                 
                 tBox:GetPropertyChangedSignal("Text"):Connect(function()
+                    if preventNextRefresh then
+                        preventNextRefresh = false
+                        return
+                    end
                     if tBox:IsFocused() then
                         refreshSuggestions(tBox.Text)
                     end
