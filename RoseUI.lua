@@ -1846,6 +1846,7 @@ function RoseUI:CreateWindow(options)
         function TabObj:AddTextbox(tbOptions)
             local tbName = tbOptions.Name or "Textbox"
             local placeholder = tbOptions.Placeholder or "Enter Text..."
+            local optionsList = tbOptions.Options -- Optional Array for Autocomplete
             local cb = tbOptions.Callback or function() end
 
             local tbFrame = Instance.new("Frame")
@@ -1903,8 +1904,103 @@ function RoseUI:CreateWindow(options)
                 cb(tBox.Text)
             end)
             
+            local suggestBg
+            if type(optionsList) == "table" then
+                GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
+                local currentZ = GLOBAL_ZINDEX
+                
+                suggestBg = Instance.new("Frame")
+                suggestBg.Size = UDim2.new(0, 150, 0, 0)
+                suggestBg.Position = UDim2.new(1, -165, 0.5, 15)
+                suggestBg.BackgroundColor3 = Color3.fromRGB(35, 18, 25)
+                suggestBg.ZIndex = currentZ + 50
+                suggestBg.ClipsDescendants = true
+                suggestBg.Visible = false
+                suggestBg.Parent = tbFrame
+                Instance.new("UICorner", suggestBg).CornerRadius = UDim.new(0, 4)
+                
+                local suggestStroke = Instance.new("UIStroke")
+                suggestStroke.Color = HEADER_COLOR
+                suggestStroke.Transparency = 0.5
+                suggestStroke.Thickness = 1
+                suggestStroke.Parent = suggestBg
+                
+                local suggestMenu = Instance.new("ScrollingFrame")
+                suggestMenu.Size = UDim2.new(1, -4, 1, -4)
+                suggestMenu.Position = UDim2.new(0, 2, 0, 2)
+                suggestMenu.BackgroundTransparency = 1
+                suggestMenu.BorderSizePixel = 0
+                suggestMenu.ScrollBarThickness = 2
+                suggestMenu.ScrollBarImageColor3 = HEADER_COLOR
+                suggestMenu.ZIndex = currentZ + 51
+                suggestMenu.Parent = suggestBg
+                
+                local suggestLayout = Instance.new("UIListLayout")
+                suggestLayout.Parent = suggestMenu
+                suggestLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+                local function refreshSuggestions(filter)
+                    for _, child in pairs(suggestMenu:GetChildren()) do
+                        if child:IsA("TextButton") then child:Destroy() end
+                    end
+                    
+                    local count = 0
+                    local lowerFilter = string.lower(filter)
+                    for _, opt in ipairs(optionsList) do
+                        if filter == "" or string.find(string.lower(opt), lowerFilter, 1, true) then
+                            count = count + 1
+                            local btn = Instance.new("TextButton")
+                            btn.Size = UDim2.new(1, -6, 0, 22)
+                            btn.BackgroundColor3 = Color3.fromRGB(40, 25, 30)
+                            btn.BackgroundTransparency = 0
+                            btn.Text = "  " .. opt
+                            btn.TextColor3 = TEXT_COLOR
+                            btn.Font = Enum.Font.Gotham
+                            btn.TextSize = 11
+                            btn.TextXAlignment = Enum.TextXAlignment.Left
+                            btn.ZIndex = currentZ + 52
+                            btn.Parent = suggestMenu
+                            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 2)
+                            
+                            btn.MouseEnter:Connect(function() 
+                                tweenService:Create(btn, TweenInfo.new(0.1), {TextColor3 = HEADER_COLOR}):Play() 
+                            end)
+                            btn.MouseLeave:Connect(function() 
+                                tweenService:Create(btn, TweenInfo.new(0.1), {TextColor3 = TEXT_COLOR}):Play() 
+                            end)
+                            
+                            btn.MouseButton1Click:Connect(function()
+                                TextboxAPI:Set(opt)
+                            end)
+                        end
+                    end
+                    
+                    local h = math.clamp(count * 22 + 4, 0, 150)
+                    suggestMenu.CanvasSize = UDim2.new(0, 0, 0, count * 22)
+                    tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 150, 0, h)}):Play()
+                end
+
+                tBox.Focused:Connect(function()
+                    suggestBg.Visible = true
+                    refreshSuggestions(tBox.Text)
+                end)
+                
+                tBox:GetPropertyChangedSignal("Text"):Connect(function()
+                    if tBox:IsFocused() then
+                        refreshSuggestions(tBox.Text)
+                    end
+                end)
+            end
+
             tBox.FocusLost:Connect(function()
                 tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
+                if suggestBg then
+                    task.delay(0.1, function() -- Minor delay to allow clicks to register
+                        local cls = tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 150, 0, 0)})
+                        cls:Play()
+                        cls.Completed:Connect(function() suggestBg.Visible = false end)
+                    end)
+                end
             end)
             
             table.insert(WindowObj.Elements, TextboxAPI)
