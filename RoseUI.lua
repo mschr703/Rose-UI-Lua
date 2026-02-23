@@ -1888,8 +1888,8 @@ function RoseUI:CreateWindow(options)
             label.Parent = tbFrame
 
             local tBox = Instance.new("TextBox")
-            tBox.Size = UDim2.new(0, 150, 0, 26)
-            tBox.Position = UDim2.new(1, -165, 0.5, -13)
+            tBox.Size = UDim2.new(0, 200, 0, 26)
+            tBox.Position = UDim2.new(1, -215, 0.5, -13)
             tBox.BackgroundColor3 = Color3.fromRGB(20, 10, 15)
             tBox.Text = ""
             tBox.PlaceholderText = placeholder
@@ -1942,8 +1942,9 @@ function RoseUI:CreateWindow(options)
                 local currentZ = GLOBAL_ZINDEX
                 
                 suggestBg = Instance.new("Frame")
-                suggestBg.Size = UDim2.new(0, 150, 0, 0)
-                suggestBg.Position = UDim2.new(1, -165, 0.5, 15)
+                suggestBg.AnchorPoint = Vector2.new(1, 0)
+                suggestBg.Size = UDim2.new(0, 200, 0, 0)
+                suggestBg.Position = UDim2.new(1, -15, 0.5, 15)
                 suggestBg.BackgroundColor3 = Color3.fromRGB(35, 18, 25)
                 suggestBg.ZIndex = currentZ + 50
                 suggestBg.ClipsDescendants = true
@@ -1971,12 +1972,14 @@ function RoseUI:CreateWindow(options)
                 suggestLayout.Parent = suggestMenu
                 suggestLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+                local TextService = game:GetService("TextService")
                 refreshSuggestions = function(filter)
                     for _, child in pairs(suggestMenu:GetChildren()) do
                         if child:IsA("TextButton") then child:Destroy() end
                     end
                     
                     local count = 0
+                    local maxWidth = 200
                     local lowerFilter = string.lower(filter)
                     for _, opt in ipairs(optionsList) do
                         if filter == "" or string.find(string.lower(opt), lowerFilter, 1, true) then
@@ -1993,6 +1996,9 @@ function RoseUI:CreateWindow(options)
                             btn.ZIndex = currentZ + 52
                             btn.Parent = suggestMenu
                             Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 2)
+                            
+                            local bounds = TextService:GetTextSize(btn.Text, 11, Enum.Font.Gotham, Vector2.new(2000, 22))
+                            if bounds.X + 30 > maxWidth then maxWidth = bounds.X + 30 end
                             
                             btn.MouseEnter:Connect(function() 
                                 tweenService:Create(btn, TweenInfo.new(0.1), {TextColor3 = HEADER_COLOR}):Play() 
@@ -2011,7 +2017,7 @@ function RoseUI:CreateWindow(options)
                     
                     local h = math.clamp(count * 22 + 4, 0, 150)
                     suggestMenu.CanvasSize = UDim2.new(0, 0, 0, count * 22)
-                    tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 150, 0, h)}):Play()
+                    tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, maxWidth, 0, h)}):Play()
                 end
 
                 tBox.Focused:Connect(function()
@@ -2030,7 +2036,7 @@ function RoseUI:CreateWindow(options)
                 tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
                 if suggestBg then
                     task.delay(0.1, function() -- Minor delay to allow clicks to register
-                        local cls = tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 150, 0, 0)})
+                        local cls = tweenService:Create(suggestBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, suggestBg.Size.X.Offset, 0, 0)})
                         cls:Play()
                         cls.Completed:Connect(function() suggestBg.Visible = false end)
                     end)
