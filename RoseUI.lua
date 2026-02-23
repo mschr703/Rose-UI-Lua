@@ -673,6 +673,14 @@ function RoseUI:CreateWindow(options)
                     page = oldPage
                     if not success then
                         warn("[RoseUI] Error in " .. tostring(methodName) .. ": " .. tostring(res))
+                        local errLabel = Instance.new("TextLabel")
+                        errLabel.Size = UDim2.new(1, 0, 0, 40)
+                        errLabel.BackgroundTransparency = 1
+                        errLabel.TextColor3 = Color3.new(1, 0.2, 0.2)
+                        errLabel.TextWrapped = true
+                        errLabel.TextScaled = true
+                        errLabel.Text = "Crash in " .. tostring(methodName) .. ": " .. tostring(res)
+                        errLabel.Parent = sectionContainer
                         return nil
                     end
                     return res
@@ -2166,4 +2174,3 @@ function RoseUI:CreateWindow(options)
 end
 
 return RoseUI
-
