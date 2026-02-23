@@ -1311,10 +1311,11 @@ function RoseUI:CreateWindow(options)
             -- Display Button shows selected items (e.g. "Egg 1, Egg 2")
             local dropBtn = Instance.new("TextButton")
             dropBtn.Size = UDim2.new(0.5, -15, 0, 30)
-            dropBtn.Position = UDim2.new(0.5, 5, 0.5, -15)
+            dropBtn.Position = UDim2.new(0.5, 5, 0, 6)
             dropBtn.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
             dropBtn.Text = "  Select..."
-            dropBtn.TextTruncate = Enum.TextTruncate.AtEnd
+            dropBtn.TextWrapped = true
+            dropBtn.TextYAlignment = Enum.TextYAlignment.Center
             dropBtn.TextColor3 = Color3.fromRGB(200, 180, 190)
             dropBtn.Font = Enum.Font.Gotham
             dropBtn.TextSize = 12
@@ -1330,8 +1331,8 @@ function RoseUI:CreateWindow(options)
             outline.Parent = dropBtn
 
             local arrow = Instance.new("TextLabel")
-            arrow.Size = UDim2.new(0, 20, 1, 0)
-            arrow.Position = UDim2.new(1, -25, 0, 0)
+            arrow.Size = UDim2.new(0, 20, 0, 30)
+            arrow.Position = UDim2.new(1, -25, 0.5, -15)
             arrow.BackgroundTransparency = 1
             arrow.Text = "▼"
             arrow.TextColor3 = Color3.fromRGB(150, 120, 130)
@@ -1401,8 +1402,16 @@ function RoseUI:CreateWindow(options)
             local function updateBtnText()
                 if #selectedItems == 0 then
                     dropBtn.Text = "  Select..."
+                    tweenService:Create(dropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, -10, 0, 42)}):Play()
+                    tweenService:Create(dropBtn, TweenInfo.new(0.2), {Size = UDim2.new(0.5, -15, 0, 30)}):Play()
                 else
                     dropBtn.Text = "  " .. table.concat(selectedItems, ", ")
+                    local estLines = math.ceil(string.len(dropBtn.Text) / 20)
+                    local newBtnH = math.max(30, estLines * 16)
+                    local newFrameH = newBtnH + 12
+                    
+                    tweenService:Create(dropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, -10, 0, newFrameH)}):Play()
+                    tweenService:Create(dropBtn, TweenInfo.new(0.2), {Size = UDim2.new(0.5, -15, 0, newBtnH)}):Play()
                 end
             end
             updateBtnText()
