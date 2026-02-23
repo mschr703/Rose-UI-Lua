@@ -669,8 +669,12 @@ function RoseUI:CreateWindow(options)
                 SectionAPI[methodName] = function(self, ...)
                     local oldPage = page
                     page = sectionContainer
-                    local res = TabObj[methodName](TabObj, ...)
+                    local success, res = pcall(function(...) return TabObj[methodName](TabObj, ...) end, ...)
                     page = oldPage
+                    if not success then
+                        warn("[RoseUI] Error in " .. tostring(methodName) .. ": " .. tostring(res))
+                        return nil
+                    end
                     return res
                 end
             end
@@ -1256,8 +1260,10 @@ function RoseUI:CreateWindow(options)
                 refreshOptions(newList)
                 if newDefault then
                     DropdownAPI:Set(newDefault)
-                elseif newList[1] then
-                    DropdownAPI:Set(newList[1])
+                elseif not table.find(newList, DropdownAPI.Value) then
+                    if newList[1] then
+                        DropdownAPI:Set(newList[1])
+                    end
                 end
             end
             table.insert(WindowObj.Elements, DropdownAPI)
@@ -1637,10 +1643,13 @@ function RoseUI:CreateWindow(options)
                 cb(val)
             end
             
-            tBox.FocusLost:Connect(function()
-                tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
+            tBox:GetPropertyChangedSignal("Text"):Connect(function()
                 TextboxAPI.Value = tBox.Text
                 cb(tBox.Text)
+            end)
+            
+            tBox.FocusLost:Connect(function()
+                tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
             end)
             
             table.insert(WindowObj.Elements, TextboxAPI)
