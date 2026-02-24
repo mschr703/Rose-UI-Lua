@@ -100,19 +100,31 @@ function RoseUI:CreateWindow(options)
     local titleText = options.Name or "Rose Hub 🌹"
     local hubType = options.HubType or "Rose Hub"
 
-    if coreGui:FindFirstChild("RoseUI_Window") then
-        coreGui.RoseUI_Window:Destroy()
+    -- Global overlapping prevention to kill old background loops
+    _G.RoseBase_ID = (_G.RoseBase_ID or 0) + 1
+    local currentID = _G.RoseBase_ID
+
+    local function getTargetGui()
+        local success, ui = pcall(function() return coreGui:FindFirstChild("RoseUI_Window") end)
+        if success then return coreGui end
+        return game.Players.LocalPlayer:WaitForChild("PlayerGui")
     end
     
-    if coreGui:FindFirstChild("RoseUI_Notifs") then
-        coreGui.RoseUI_Notifs:Destroy()
+    local targetContainer = getTargetGui()
+
+    if targetContainer:FindFirstChild("RoseUI_Window") then
+        targetContainer.RoseUI_Window:Destroy()
+    end
+    
+    if targetContainer:FindFirstChild("RoseUI_Notifs") then
+        targetContainer.RoseUI_Notifs:Destroy()
     end
     
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "RoseUI_Window"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    screenGui.Parent = coreGui
+    screenGui.Parent = targetContainer
     
     -- Main Container
     local dragFrame = Instance.new("Frame")
@@ -472,7 +484,8 @@ function RoseUI:CreateWindow(options)
         CurrentTab = nil,
         Tabs = {},
         Elements = {},
-        ConfigFolder = options.ConfigFolder or "RoseHubConfigs"
+        ConfigFolder = options.ConfigFolder or "RoseHubConfigs",
+        ID = currentID
     }
     
     if makefolder and not isfolder(WindowObj.ConfigFolder) then
