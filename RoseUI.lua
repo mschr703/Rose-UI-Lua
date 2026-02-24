@@ -698,6 +698,7 @@ function RoseUI:CreateWindow(options)
             proxyMethod("AddTextbox")
             proxyMethod("AddKeybind")
             proxyMethod("AddInventoryGrid")
+            proxyMethod("AddPlotGrid")
             
             return SectionAPI
         end
