@@ -1339,6 +1339,20 @@ function RoseUI:CreateWindow(options)
                     nameLbl.ZIndex = currentZ + 2
                     nameLbl.Parent = itemFrame
                     
+                    local starsLbl = Instance.new("TextLabel")
+                    starsLbl.Size = UDim2.new(0, 50, 1, 0)
+                    starsLbl.Position = UDim2.new(1, -115, 0, 0)
+                    starsLbl.BackgroundTransparency = 1
+                    local stNum = tostring(itemData.Stars or "1")
+                    if stNum == "0" or stNum == "" then stNum = "1" end
+                    starsLbl.Text = stNum .. " ⭐"
+                    starsLbl.TextColor3 = Color3.fromRGB(245, 205, 50)
+                    starsLbl.Font = Enum.Font.GothamBold
+                    starsLbl.TextSize = 11
+                    starsLbl.TextXAlignment = Enum.TextXAlignment.Right
+                    starsLbl.ZIndex = currentZ + 2
+                    starsLbl.Parent = itemFrame
+                    
                     local valLbl = Instance.new("TextLabel")
                     valLbl.Size = UDim2.new(0.4, -10, 1, 0)
                     valLbl.Position = UDim2.new(0.4, 0, 0, 0)
