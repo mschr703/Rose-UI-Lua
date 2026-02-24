@@ -1313,97 +1313,119 @@ function RoseUI:CreateWindow(options)
                 Type = "InventoryGrid"
             }
             
+            local frameCache = {}
+            local currentListRef = {}
+            
             function InvAPI:Refresh(newList)
-                for _, child in pairs(gridContainer:GetChildren()) do
-                    if child:IsA("Frame") then child:Destroy() end
-                end
-                
+                currentListRef = newList
                 local count = 0
-                for _, itemData in ipairs(newList) do
+                for i, itemData in ipairs(newList) do
                     count = count + 1
-                    local itemFrame = Instance.new("Frame")
-                    itemFrame.Size = UDim2.new(1, -10, 0, 30)
-                    itemFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
-                    itemFrame.ZIndex = currentZ + 1
-                    itemFrame.Parent = gridContainer
-                    Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0, 4)
+                    local itemFrame = frameCache[i]
+                    if not itemFrame then
+                        itemFrame = Instance.new("Frame")
+                        itemFrame.Size = UDim2.new(1, -10, 0, 30)
+                        itemFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
+                        itemFrame.ZIndex = currentZ + 1
+                        itemFrame.Parent = gridContainer
+                        Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0, 4)
+                        
+                        local nameLbl = Instance.new("TextLabel")
+                        nameLbl.Name = "NameLbl"
+                        nameLbl.Size = UDim2.new(0.4, 0, 1, 0)
+                        nameLbl.Position = UDim2.new(0, 10, 0, 0)
+                        nameLbl.BackgroundTransparency = 1
+                        nameLbl.TextColor3 = TEXT_COLOR
+                        nameLbl.Font = Enum.Font.GothamSemibold
+                        nameLbl.TextSize = 12
+                        nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        nameLbl.ZIndex = currentZ + 2
+                        nameLbl.Parent = itemFrame
+                        
+                        local starsLbl = Instance.new("TextLabel")
+                        starsLbl.Name = "StarsLbl"
+                        starsLbl.Size = UDim2.new(0, 45, 1, 0)
+                        starsLbl.Position = UDim2.new(1, -105, 0, 0)
+                        starsLbl.BackgroundTransparency = 1
+                        starsLbl.TextColor3 = Color3.fromRGB(245, 205, 50)
+                        starsLbl.Font = Enum.Font.GothamBold
+                        starsLbl.TextSize = 11
+                        starsLbl.TextXAlignment = Enum.TextXAlignment.Right
+                        starsLbl.ZIndex = currentZ + 2
+                        starsLbl.Parent = itemFrame
+                        
+                        local levelLbl = Instance.new("TextLabel")
+                        levelLbl.Name = "LevelLbl"
+                        levelLbl.Size = UDim2.new(0, 50, 1, 0)
+                        levelLbl.Position = UDim2.new(1, -155, 0, 0)
+                        levelLbl.BackgroundTransparency = 1
+                        levelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
+                        levelLbl.Font = Enum.Font.GothamBold
+                        levelLbl.TextSize = 11
+                        levelLbl.TextXAlignment = Enum.TextXAlignment.Right
+                        levelLbl.ZIndex = currentZ + 2
+                        levelLbl.Parent = itemFrame
+                        
+                        local valLbl = Instance.new("TextLabel")
+                        valLbl.Name = "ValLbl"
+                        valLbl.Size = UDim2.new(0.4, -10, 1, 0)
+                        valLbl.Position = UDim2.new(0.4, 0, 0, 0)
+                        valLbl.BackgroundTransparency = 1
+                        valLbl.Font = Enum.Font.Gotham
+                        valLbl.TextSize = 11
+                        valLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        valLbl.ZIndex = currentZ + 2
+                        valLbl.Parent = itemFrame
+                        
+                        local sellBtn = Instance.new("TextButton")
+                        sellBtn.Name = "SellBtn"
+                        sellBtn.Size = UDim2.new(0, 50, 0, 22)
+                        sellBtn.Position = UDim2.new(1, -55, 0.5, -11)
+                        sellBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 70)
+                        sellBtn.Text = "Sell"
+                        sellBtn.TextColor3 = Color3.new(1,1,1)
+                        sellBtn.Font = Enum.Font.GothamBold
+                        sellBtn.TextSize = 11
+                        sellBtn.ZIndex = currentZ + 3
+                        sellBtn.Parent = itemFrame
+                        Instance.new("UICorner", sellBtn).CornerRadius = UDim.new(0, 4)
+                        
+                        local btnStroke = Instance.new("UIStroke")
+                        btnStroke.Color = Color3.fromRGB(255, 100, 100)
+                        btnStroke.Transparency = 0.5
+                        btnStroke.Parent = sellBtn
+                        
+                        sellBtn.MouseButton1Click:Connect(function()
+                            if cb and currentListRef[itemFrame:GetAttribute("Index")] then
+                                cb(currentListRef[itemFrame:GetAttribute("Index")])
+                            end
+                        end)
+                        
+                        frameCache[i] = itemFrame
+                    end
                     
-                    local nameLbl = Instance.new("TextLabel")
-                    nameLbl.Size = UDim2.new(0.4, 0, 1, 0)
-                    nameLbl.Position = UDim2.new(0, 10, 0, 0)
-                    nameLbl.BackgroundTransparency = 1
-                    nameLbl.Text = itemData.Name or "Unknown"
-                    nameLbl.TextColor3 = TEXT_COLOR
-                    nameLbl.Font = Enum.Font.GothamSemibold
-                    nameLbl.TextSize = 12
-                    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-                    nameLbl.ZIndex = currentZ + 2
-                    nameLbl.Parent = itemFrame
+                    itemFrame:SetAttribute("Index", i)
+                    itemFrame.Visible = true
                     
-                    local starsLbl = Instance.new("TextLabel")
-                    starsLbl.Size = UDim2.new(0, 50, 1, 0)
-                    starsLbl.Position = UDim2.new(1, -100, 0, 0)
-                    starsLbl.BackgroundTransparency = 1
+                    itemFrame.NameLbl.Text = itemData.Name or "Unknown"
                     local stNum = tostring(itemData.Stars or "1")
                     if stNum == "0" or stNum == "" then stNum = "1" end
-                    starsLbl.Text = stNum .. " ⭐"
-                    starsLbl.TextColor3 = Color3.fromRGB(245, 205, 50)
-                    starsLbl.Font = Enum.Font.GothamBold
-                    starsLbl.TextSize = 11
-                    starsLbl.TextXAlignment = Enum.TextXAlignment.Right
-                    starsLbl.ZIndex = currentZ + 2
-                    starsLbl.Parent = itemFrame
+                    itemFrame.StarsLbl.Text = stNum .. " ⭐"
                     
-                    local levelLbl = Instance.new("TextLabel")
-                    levelLbl.Size = UDim2.new(0, 55, 1, 0)
-                    levelLbl.Position = UDim2.new(1, -160, 0, 0)
-                    levelLbl.BackgroundTransparency = 1
                     local lvNum = tostring(itemData.Level or "1")
                     if lvNum == "0" or lvNum == "" then lvNum = "1" end
-                    levelLbl.Text = "📈 LV: " .. lvNum
-                    levelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
-                    levelLbl.Font = Enum.Font.GothamBold
-                    levelLbl.TextSize = 11
-                    levelLbl.TextXAlignment = Enum.TextXAlignment.Right
-                    levelLbl.ZIndex = currentZ + 2
-                    levelLbl.Parent = itemFrame
+                    itemFrame.LevelLbl.Text = "📈 LV: " .. lvNum
                     
-                    local valLbl = Instance.new("TextLabel")
-                    valLbl.Size = UDim2.new(0.4, -10, 1, 0)
-                    valLbl.Position = UDim2.new(0.4, 0, 0, 0)
-                    valLbl.BackgroundTransparency = 1
-                    valLbl.Text = (itemData.Rank or "") .. " | $" .. tostring(itemData.Value or "0")
+                    itemFrame.ValLbl.Text = (itemData.Rank or "") .. " | $" .. tostring(itemData.Value or "0")
                     if itemData.Rank == "Divine" or itemData.Rank == "GOD" or itemData.Rank == "???" then
-                        valLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+                        itemFrame.ValLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
                     else
-                        valLbl.TextColor3 = Color3.fromRGB(150, 200, 150)
+                        itemFrame.ValLbl.TextColor3 = Color3.fromRGB(150, 200, 150)
                     end
-                    valLbl.Font = Enum.Font.Gotham
-                    valLbl.TextSize = 11
-                    valLbl.TextXAlignment = Enum.TextXAlignment.Left
-                    valLbl.ZIndex = currentZ + 2
-                    valLbl.Parent = itemFrame
-                    
-                    local sellBtn = Instance.new("TextButton")
-                    sellBtn.Size = UDim2.new(0, 50, 0, 22)
-                    sellBtn.Position = UDim2.new(1, -55, 0.5, -11)
-                    sellBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 70)
-                    sellBtn.Text = "Sell"
-                    sellBtn.TextColor3 = Color3.new(1,1,1)
-                    sellBtn.Font = Enum.Font.GothamBold
-                    sellBtn.TextSize = 11
-                    sellBtn.ZIndex = currentZ + 3
-                    sellBtn.Parent = itemFrame
-                    Instance.new("UICorner", sellBtn).CornerRadius = UDim.new(0, 4)
-                    
-                    local btnStroke = Instance.new("UIStroke")
-                    btnStroke.Color = Color3.fromRGB(255, 100, 100)
-                    btnStroke.Transparency = 0.5
-                    btnStroke.Parent = sellBtn
-                    
-                    sellBtn.MouseButton1Click:Connect(function()
-                        cb(itemData)
-                    end)
+                end
+                
+                for i = count + 1, #frameCache do
+                    frameCache[i].Visible = false
                 end
                 
                 gridContainer.Size = UDim2.new(1, -10, 0, (count * 34) + 10)
@@ -1444,114 +1466,161 @@ function RoseUI:CreateWindow(options)
                 Type = "PlotGrid"
             }
             
+            local frameCache = {}
+            local currentListRef = {}
+            
             function PlotAPI:Refresh(newList)
-                for _, child in pairs(gridContainer:GetChildren()) do
-                    if child:IsA("Frame") then child:Destroy() end
-                end
-                
+                currentListRef = newList
                 local count = 0
-                for _, itemData in ipairs(newList) do
+                for i, itemData in ipairs(newList) do
                     count = count + 1
-                    local itemFrame = Instance.new("Frame")
-                    itemFrame.Size = UDim2.new(1, -10, 0, 30)
-                    itemFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
-                    itemFrame.ZIndex = currentZ + 1
-                    itemFrame.Parent = gridContainer
-                    Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0, 4)
+                    local itemFrame = frameCache[i]
+                    if not itemFrame then
+                        itemFrame = Instance.new("Frame")
+                        itemFrame.Size = UDim2.new(1, -10, 0, 30)
+                        itemFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 35)
+                        itemFrame.ZIndex = currentZ + 1
+                        itemFrame.Parent = gridContainer
+                        Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0, 4)
+                        
+                        local nameLbl = Instance.new("TextLabel")
+                        nameLbl.Name = "NameLbl"
+                        nameLbl.Size = UDim2.new(0.3, 0, 1, 0)
+                        nameLbl.Position = UDim2.new(0, 10, 0, 0)
+                        nameLbl.BackgroundTransparency = 1
+                        nameLbl.TextColor3 = TEXT_COLOR
+                        nameLbl.Font = Enum.Font.GothamSemibold
+                        nameLbl.TextSize = 11
+                        nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        nameLbl.ZIndex = currentZ + 2
+                        nameLbl.Parent = itemFrame
+                        
+                        local starsLbl = Instance.new("TextLabel")
+                        starsLbl.Name = "StarsLbl"
+                        starsLbl.Size = UDim2.new(0, 40, 1, 0)
+                        starsLbl.Position = UDim2.new(1, -210, 0, 0)
+                        starsLbl.BackgroundTransparency = 1
+                        starsLbl.TextColor3 = Color3.fromRGB(245, 205, 50)
+                        starsLbl.Font = Enum.Font.GothamBold
+                        starsLbl.TextSize = 10
+                        starsLbl.TextXAlignment = Enum.TextXAlignment.Right
+                        starsLbl.ZIndex = currentZ + 2
+                        starsLbl.Parent = itemFrame
+                        
+                        local levelLbl = Instance.new("TextLabel")
+                        levelLbl.Name = "LevelLbl"
+                        levelLbl.Size = UDim2.new(0, 50, 1, 0)
+                        levelLbl.Position = UDim2.new(1, -255, 0, 0)
+                        levelLbl.BackgroundTransparency = 1
+                        levelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
+                        levelLbl.Font = Enum.Font.GothamBold
+                        levelLbl.TextSize = 10
+                        levelLbl.TextXAlignment = Enum.TextXAlignment.Right
+                        levelLbl.ZIndex = currentZ + 2
+                        levelLbl.Parent = itemFrame
+                        
+                        local valLbl = Instance.new("TextLabel")
+                        valLbl.Name = "ValLbl"
+                        valLbl.Size = UDim2.new(0.3, 0, 1, 0)
+                        valLbl.Position = UDim2.new(0.3, 0, 0, 0)
+                        valLbl.BackgroundTransparency = 1
+                        valLbl.Font = Enum.Font.Gotham
+                        valLbl.TextSize = 10
+                        valLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        valLbl.ZIndex = currentZ + 2
+                        valLbl.Parent = itemFrame
+                        
+                        local pickupBtn = Instance.new("TextButton")
+                        pickupBtn.Name = "PickupBtn"
+                        pickupBtn.Size = UDim2.new(0, 60, 0, 22)
+                        pickupBtn.Position = UDim2.new(1, -65, 0.5, -11)
+                        pickupBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+                        pickupBtn.Text = "✋ Pick Up"
+                        pickupBtn.TextColor3 = Color3.new(1,1,1)
+                        pickupBtn.Font = Enum.Font.GothamBold
+                        pickupBtn.TextSize = 10
+                        pickupBtn.ZIndex = currentZ + 3
+                        pickupBtn.Parent = itemFrame
+                        Instance.new("UICorner", pickupBtn).CornerRadius = UDim.new(0, 4)
+                        local puStroke = Instance.new("UIStroke", pickupBtn) puStroke.Color = Color3.fromRGB(100, 150, 255) puStroke.Transparency = 0.5
+                        pickupBtn.MouseButton1Click:Connect(function() 
+                            if onPickup and currentListRef[itemFrame:GetAttribute("Index")] then
+                                onPickup(currentListRef[itemFrame:GetAttribute("Index")])
+                            end
+                        end)
+                        
+                        local actionBtn = Instance.new("TextButton")
+                        actionBtn.Name = "ActionBtn"
+                        actionBtn.Size = UDim2.new(0, 65, 0, 22)
+                        actionBtn.Position = UDim2.new(1, -135, 0.5, -11)
+                        actionBtn.TextSize = 10
+                        actionBtn.Font = Enum.Font.GothamBold
+                        actionBtn.TextColor3 = Color3.new(1,1,1)
+                        actionBtn.ZIndex = currentZ + 3
+                        actionBtn.Parent = itemFrame
+                        Instance.new("UICorner", actionBtn).CornerRadius = UDim.new(0, 4)
+                        local acStroke = Instance.new("UIStroke", actionBtn) acStroke.Name = "UIStroke" acStroke.Transparency = 0.5
+                        
+                        actionBtn.MouseButton1Click:Connect(function() 
+                            local ref = currentListRef[itemFrame:GetAttribute("Index")]
+                            if not ref then return end
+                            local lvNum = tostring(ref.Level or "1")
+                            if tonumber(lvNum) and tonumber(lvNum) >= 50 then
+                                if onPrestige then onPrestige(ref) end
+                            else
+                                if onUpgrade then onUpgrade(ref) end
+                            end
+                        end)
+                        
+                        frameCache[i] = itemFrame
+                    end
                     
-                    local nameLbl = Instance.new("TextLabel")
-                    nameLbl.Size = UDim2.new(0.3, 0, 1, 0)
-                    nameLbl.Position = UDim2.new(0, 10, 0, 0)
-                    nameLbl.BackgroundTransparency = 1
-                    nameLbl.Text = itemData.Name or "Unknown"
-                    nameLbl.TextColor3 = TEXT_COLOR
-                    nameLbl.Font = Enum.Font.GothamSemibold
-                    nameLbl.TextSize = 11
-                    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
-                    nameLbl.ZIndex = currentZ + 2
-                    nameLbl.Parent = itemFrame
+                    itemFrame:SetAttribute("Index", i)
+                    itemFrame.Visible = true
+                    
+                    itemFrame.NameLbl.Text = itemData.Name or "Unknown"
+                    local stNum = tostring(itemData.Stars or "1")
+                    if stNum == "0" or stNum == "" then stNum = "1" end
+                    itemFrame.StarsLbl.Text = stNum .. " ⭐"
+                    
+                    local lvNum = tostring(itemData.Level or "1")
+                    if lvNum == "0" or lvNum == "" then lvNum = "1" end
+                    itemFrame.LevelLbl.Text = "📈 LV: " .. lvNum
+                    itemFrame.LevelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
+                    
+                    itemFrame.ValLbl.Text = (itemData.Rank or "") .. " | $" .. tostring(itemData.Value or "0")
+                    if itemData.Rank == "Divine" or itemData.Rank == "GOD" or itemData.Rank == "???" then
+                        itemFrame.ValLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+                    else
+                        itemFrame.ValLbl.TextColor3 = Color3.fromRGB(150, 200, 150)
+                    end
                     
                     local isPrestigeEligible = false
-                    local lvNum = tostring(itemData.Level or "1")
                     if tonumber(lvNum) and tonumber(lvNum) >= 50 then isPrestigeEligible = true end
                     
-                    local starsLbl = Instance.new("TextLabel")
-                    starsLbl.Size = UDim2.new(0, 40, 1, 0)
-                    starsLbl.Position = UDim2.new(1, -215, 0, 0)
-                    starsLbl.BackgroundTransparency = 1
-                    local stNum = tostring(itemData.Stars or "1")
-                    starsLbl.Text = stNum .. " ⭐"
-                    starsLbl.TextColor3 = Color3.fromRGB(245, 205, 50)
-                    starsLbl.Font = Enum.Font.GothamBold
-                    starsLbl.TextSize = 10
-                    starsLbl.TextXAlignment = Enum.TextXAlignment.Right
-                    starsLbl.ZIndex = currentZ + 2
-                    starsLbl.Parent = itemFrame
-                    
-                    local levelLbl = Instance.new("TextLabel")
-                    levelLbl.Size = UDim2.new(0, 50, 1, 0)
-                    levelLbl.Position = UDim2.new(1, -265, 0, 0)
-                    levelLbl.BackgroundTransparency = 1
-                    levelLbl.Text = "📈 LV: " .. lvNum
-                    levelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
-                    levelLbl.Font = Enum.Font.GothamBold
-                    levelLbl.TextSize = 10
-                    levelLbl.TextXAlignment = Enum.TextXAlignment.Right
-                    levelLbl.ZIndex = currentZ + 2
-                    levelLbl.Parent = itemFrame
-                    
-                    local valLbl = Instance.new("TextLabel")
-                    valLbl.Size = UDim2.new(0.3, 0, 1, 0)
-                    valLbl.Position = UDim2.new(0.3, 0, 0, 0)
-                    valLbl.BackgroundTransparency = 1
-                    valLbl.Text = (itemData.Rank or "") .. " | $" .. tostring(itemData.Value or "0")
-                    if itemData.Rank == "Divine" or itemData.Rank == "GOD" or itemData.Rank == "???" then
-                        valLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
-                    else
-                        valLbl.TextColor3 = Color3.fromRGB(150, 200, 150)
-                    end
-                    valLbl.Font = Enum.Font.Gotham
-                    valLbl.TextSize = 10
-                    valLbl.TextXAlignment = Enum.TextXAlignment.Left
-                    valLbl.ZIndex = currentZ + 2
-                    valLbl.Parent = itemFrame
-                    
-                    local pickupBtn = Instance.new("TextButton")
-                    pickupBtn.Size = UDim2.new(0, 60, 0, 22)
-                    pickupBtn.Position = UDim2.new(1, -65, 0.5, -11)
-                    pickupBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
-                    pickupBtn.Text = "✋ Pick Up"
-                    pickupBtn.TextColor3 = Color3.new(1,1,1)
-                    pickupBtn.Font = Enum.Font.GothamBold
-                    pickupBtn.TextSize = 10
-                    pickupBtn.ZIndex = currentZ + 3
-                    pickupBtn.Parent = itemFrame
-                    Instance.new("UICorner", pickupBtn).CornerRadius = UDim.new(0, 4)
-                    local puStroke = Instance.new("UIStroke", pickupBtn) puStroke.Color = Color3.fromRGB(100, 150, 255) puStroke.Transparency = 0.5
-                    pickupBtn.MouseButton1Click:Connect(function() onPickup(itemData) end)
-                    
-                    local actionBtn = Instance.new("TextButton")
-                    actionBtn.Size = UDim2.new(0, 65, 0, 22)
-                    actionBtn.Position = UDim2.new(1, -135, 0.5, -11)
-                    actionBtn.TextSize = 10
-                    actionBtn.Font = Enum.Font.GothamBold
-                    actionBtn.TextColor3 = Color3.new(1,1,1)
-                    actionBtn.ZIndex = currentZ + 3
-                    actionBtn.Parent = itemFrame
-                    Instance.new("UICorner", actionBtn).CornerRadius = UDim.new(0, 4)
-                    local acStroke = Instance.new("UIStroke", actionBtn) acStroke.Transparency = 0.5
-                    
                     if isPrestigeEligible then
-                        actionBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
-                        actionBtn.Text = "⭐ Prestige"
-                        acStroke.Color = Color3.fromRGB(255, 200, 100)
-                        actionBtn.MouseButton1Click:Connect(function() onPrestige(itemData) end)
+                        itemFrame.ActionBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+                        itemFrame.ActionBtn.Text = "⭐ Prestige"
+                        itemFrame.ActionBtn.UIStroke.Color = Color3.fromRGB(255, 200, 100)
                     else
-                        actionBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
-                        actionBtn.Text = "🔥 Lvl. 50"
-                        acStroke.Color = Color3.fromRGB(100, 255, 150)
-                        actionBtn.MouseButton1Click:Connect(function() onUpgrade(itemData) end)
+                        itemFrame.ActionBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+                        itemFrame.ActionBtn.Text = "🔥 Lvl. 50"
+                        itemFrame.ActionBtn.UIStroke.Color = Color3.fromRGB(100, 255, 150)
                     end
+                    
+                    if itemData.IsHatching then
+                        itemFrame.StarsLbl.Text = ""
+                        itemFrame.LevelLbl.Text = itemData.StatusText or "🥚 Hatching"
+                        itemFrame.LevelLbl.TextColor3 = Color3.fromRGB(250, 200, 100)
+                        itemFrame.ActionBtn.Visible = false
+                        itemFrame.ValLbl.Text = "--"
+                    else
+                        itemFrame.ActionBtn.Visible = true
+                    end
+                end
+                
+                for i = count + 1, #frameCache do
+                    frameCache[i].Visible = false
                 end
                 
                 gridContainer.Size = UDim2.new(1, -10, 0, (count * 34) + 10)
