@@ -21,7 +21,10 @@ function RoseUI:Notify(options)
     local text = options.Text or ""
     local dur = options.Duration or 5
 
-    local notifGui = coreGui:FindFirstChild("RoseUI_Notifs")
+    local success, notifGui = pcall(function() return coreGui:FindFirstChild("RoseUI_Notifs") end)
+    local targetParent = success and coreGui or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    notifGui = targetParent:FindFirstChild("RoseUI_Notifs")
+    
     if not notifGui then
         notifGui = Instance.new("ScreenGui")
         notifGui.Name = "RoseUI_Notifs"
