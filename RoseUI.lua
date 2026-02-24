@@ -1,5 +1,5 @@
 --=============================================================================--
---  ROSE UI FRAMEWORK (V4 - Windows Resizing, Animations, Premium Dropdowns)
+--  ROSE UI FRAMEWORK (V3 - Windows Resizing, Animations, Premium Dropdowns)
 --=============================================================================--
 local RoseUI = {}
 local tweenService = game:GetService("TweenService")
@@ -1442,6 +1442,7 @@ function RoseUI:CreateWindow(options)
             local onPickup = plotOptions.OnPickup or function() end
             local onUpgrade = plotOptions.OnUpgrade or function() end
             local onPrestige = plotOptions.OnPrestige or function() end
+            local onTitleClick = plotOptions.OnTitleClick or function() end
             
             GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
             local currentZ = GLOBAL_ZINDEX
@@ -1486,7 +1487,7 @@ function RoseUI:CreateWindow(options)
                         itemFrame.Parent = gridContainer
                         Instance.new("UICorner", itemFrame).CornerRadius = UDim.new(0, 4)
                         
-                        local nameLbl = Instance.new("TextLabel")
+                        local nameLbl = Instance.new("TextButton")
                         nameLbl.Name = "NameLbl"
                         nameLbl.Size = UDim2.new(0.3, 0, 1, 0)
                         nameLbl.Position = UDim2.new(0, 10, 0, 0)
@@ -1497,6 +1498,12 @@ function RoseUI:CreateWindow(options)
                         nameLbl.TextXAlignment = Enum.TextXAlignment.Left
                         nameLbl.ZIndex = currentZ + 2
                         nameLbl.Parent = itemFrame
+                        
+                        nameLbl.MouseButton1Click:Connect(function()
+                            if onTitleClick and currentListRef[itemFrame:GetAttribute("Index")] then
+                                onTitleClick(currentListRef[itemFrame:GetAttribute("Index")])
+                            end
+                        end)
                         
                         local starsLbl = Instance.new("TextLabel")
                         starsLbl.Name = "StarsLbl"
