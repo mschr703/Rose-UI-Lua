@@ -1565,7 +1565,8 @@ function RoseUI:CreateWindow(options)
                             local ref = currentListRef[itemFrame:GetAttribute("Index")]
                             if not ref then return end
                             local lvNum = tostring(ref.Level or "1")
-                            local isMaxStars = tostring(ref.Stars) == "4"
+                            local refSt = tostring(ref.Stars or "1")
+                            local isMaxStars = string.match(refSt, "4") ~= nil
                             
                             if tonumber(lvNum) and tonumber(lvNum) >= 50 and not isMaxStars then
                                 if onPrestige then onPrestige(ref) end
@@ -1600,8 +1601,14 @@ function RoseUI:CreateWindow(options)
                     
                     local lvNum = tostring(itemData.Level or "1")
                     if lvNum == "0" or lvNum == "" then lvNum = "1" end
-                    itemFrame.LevelLbl.Text = "📈 LV: " .. lvNum
-                    itemFrame.LevelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
+                    
+                    if lvNum == "55" then
+                        itemFrame.LevelLbl.Text = "📈 MAX LVL"
+                        itemFrame.LevelLbl.TextColor3 = Color3.fromRGB(255, 100, 100)
+                    else
+                        itemFrame.LevelLbl.Text = "📈 LV: " .. lvNum
+                        itemFrame.LevelLbl.TextColor3 = Color3.fromRGB(150, 200, 255)
+                    end
                     
                     itemFrame.ValLbl.Text = (itemData.Rank or "") .. " | $" .. tostring(itemData.Value or "0")
                     if itemData.Rank == "Divine" or itemData.Rank == "GOD" or itemData.Rank == "???" then
@@ -1612,7 +1619,7 @@ function RoseUI:CreateWindow(options)
                     
                     local isPrestigeEligible = false
                     if tonumber(lvNum) and tonumber(lvNum) >= 50 then isPrestigeEligible = true end
-                    local isMaxStars = stNum == "4" or stNum == "4 ⭐"
+                    local isMaxStars = string.match(stNum, "4") ~= nil
                     
                     if isPrestigeEligible and not isMaxStars then
                         itemFrame.ActionBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
