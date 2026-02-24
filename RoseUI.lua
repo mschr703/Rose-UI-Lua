@@ -1551,8 +1551,8 @@ function RoseUI:CreateWindow(options)
                         
                         local actionBtn = Instance.new("TextButton")
                         actionBtn.Name = "ActionBtn"
-                        actionBtn.Size = UDim2.new(0, 65, 0, 22)
-                        actionBtn.Position = UDim2.new(1, -135, 0.5, -11)
+                        actionBtn.Size = UDim2.new(0, 75, 0, 22)
+                        actionBtn.Position = UDim2.new(1, -145, 0.5, -11)
                         actionBtn.TextSize = 10
                         actionBtn.Font = Enum.Font.GothamBold
                         actionBtn.TextColor3 = Color3.new(1,1,1)
@@ -1565,12 +1565,27 @@ function RoseUI:CreateWindow(options)
                             local ref = currentListRef[itemFrame:GetAttribute("Index")]
                             if not ref then return end
                             local lvNum = tostring(ref.Level or "1")
-                            if tonumber(lvNum) and tonumber(lvNum) >= 50 then
+                            local isMaxStars = tostring(ref.Stars) == "4"
+                            
+                            if tonumber(lvNum) and tonumber(lvNum) >= 50 and not isMaxStars then
                                 if onPrestige then onPrestige(ref) end
                             else
                                 if onUpgrade then onUpgrade(ref) end
                             end
                         end)
+                        
+                        local hatchLbl = Instance.new("TextLabel")
+                        hatchLbl.Name = "HatchLbl"
+                        hatchLbl.Size = UDim2.new(0, 140, 1, 0)
+                        hatchLbl.Position = UDim2.new(1, -145, 0, 0)
+                        hatchLbl.BackgroundTransparency = 1
+                        hatchLbl.Font = Enum.Font.GothamBold
+                        hatchLbl.TextSize = 11
+                        hatchLbl.TextXAlignment = Enum.TextXAlignment.Center
+                        hatchLbl.TextColor3 = Color3.fromRGB(250, 200, 100)
+                        hatchLbl.ZIndex = currentZ + 3
+                        hatchLbl.Visible = false
+                        hatchLbl.Parent = itemFrame
                         
                         frameCache[i] = itemFrame
                     end
@@ -1597,11 +1612,16 @@ function RoseUI:CreateWindow(options)
                     
                     local isPrestigeEligible = false
                     if tonumber(lvNum) and tonumber(lvNum) >= 50 then isPrestigeEligible = true end
+                    local isMaxStars = stNum == "4" or stNum == "4 ⭐"
                     
-                    if isPrestigeEligible then
+                    if isPrestigeEligible and not isMaxStars then
                         itemFrame.ActionBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
                         itemFrame.ActionBtn.Text = "⭐ Prestige"
                         itemFrame.ActionBtn.UIStroke.Color = Color3.fromRGB(255, 200, 100)
+                    elseif isMaxStars then
+                        itemFrame.ActionBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
+                        itemFrame.ActionBtn.Text = "⬆️ +1 Lvl"
+                        itemFrame.ActionBtn.UIStroke.Color = Color3.fromRGB(100, 255, 150)
                     else
                         itemFrame.ActionBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 100)
                         itemFrame.ActionBtn.Text = "🔥 Lvl. 50"
@@ -1609,12 +1629,18 @@ function RoseUI:CreateWindow(options)
                     end
                     
                     if itemData.IsHatching then
-                        itemFrame.StarsLbl.Text = ""
-                        itemFrame.LevelLbl.Text = itemData.StatusText or "🥚 Hatching"
-                        itemFrame.LevelLbl.TextColor3 = Color3.fromRGB(250, 200, 100)
+                        itemFrame.HatchLbl.Text = itemData.StatusText or "🥚 Hatching"
+                        itemFrame.HatchLbl.Visible = true
+                        
+                        itemFrame.PickupBtn.Visible = false
                         itemFrame.ActionBtn.Visible = false
+                        
                         itemFrame.ValLbl.Text = "--"
+                        itemFrame.LevelLbl.Text = ""
+                        itemFrame.StarsLbl.Text = ""
                     else
+                        itemFrame.HatchLbl.Visible = false
+                        itemFrame.PickupBtn.Visible = true
                         itemFrame.ActionBtn.Visible = true
                     end
                 end
