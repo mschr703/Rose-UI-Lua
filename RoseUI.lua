@@ -1,5 +1,5 @@
 --=============================================================================--
---  ROSE UI FRAMEWORK (V3 - Windows Resizing, Animations, Premium Dropdowns)
+--  ROSE UI FRAMEWORK (V4 - Windows Resizing, Animations, Premium Dropdowns)
 --=============================================================================--
 local RoseUI = {}
 local tweenService = game:GetService("TweenService")
