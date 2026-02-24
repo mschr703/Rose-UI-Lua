@@ -104,6 +104,14 @@ function RoseUI:CreateWindow(options)
     _G.RoseBase_ID = (_G.RoseBase_ID or 0) + 1
     local currentID = _G.RoseBase_ID
 
+    -- Purge old global event connections to stop massive memory leaks
+    if _G.RoseUI_Connections then
+        for _, conn in pairs(_G.RoseUI_Connections) do
+            if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+        end
+    end
+    _G.RoseUI_Connections = {}
+
     local function getTargetGui()
         local success, ui = pcall(function() return coreGui:FindFirstChild("RoseUI_Window") end)
         if success then return coreGui end
@@ -162,7 +170,7 @@ function RoseUI:CreateWindow(options)
             dragInput = input
         end
     end)
-    UserInputService.InputChanged:Connect(function(input)
+    local dragCon = UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
             tweenService:Create(dragFrame, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -170,6 +178,7 @@ function RoseUI:CreateWindow(options)
             }):Play()
         end
     end)
+    table.insert(_G.RoseUI_Connections, dragCon)
 
     local mainStroke = Instance.new("UIStroke")
     mainStroke.Color = HEADER_COLOR
@@ -276,6 +285,7 @@ function RoseUI:CreateWindow(options)
             ToggleUI()
         end
     end)
+    table.insert(_G.RoseUI_Connections, inputConnection)
 
 
     maxBtn.MouseButton1Click:Connect(function()
@@ -321,7 +331,7 @@ function RoseUI:CreateWindow(options)
             end
         end)
         
-        UserInputService.InputEnded:Connect(function(input)
+        local resEnd = UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 isGrabbing = false
                 UserInputService.MouseIconEnabled = true
@@ -329,7 +339,7 @@ function RoseUI:CreateWindow(options)
             end
         end)
         
-        UserInputService.InputChanged:Connect(function(input)
+        local resChg = UserInputService.InputChanged:Connect(function(input)
             if isGrabbing and input.UserInputType == Enum.UserInputType.MouseMovement then
                 local delta = input.Position - startPos
                 local newX = startSize.X.Offset + (cursorX and delta.X or 0)
@@ -337,6 +347,9 @@ function RoseUI:CreateWindow(options)
                 dragFrame.Size = UDim2.new(0, math.clamp(newX, 450, 1200), 0, math.clamp(newY, 300, 1000))
             end
         end)
+        
+        table.insert(_G.RoseUI_Connections, resEnd)
+        table.insert(_G.RoseUI_Connections, resChg)
 
         grip.MouseEnter:Connect(function()
             if not isGrabbing then
@@ -2700,13 +2713,14 @@ function RoseUI:CreateWindow(options)
                 end)
             end)
 
-            UserInputService.InputBegan:Connect(function(input, processed)
+            local mainConn = UserInputService.InputBegan:Connect(function(input, processed)
                 if not processed and input.KeyCode == currentKey and not isWaiting then
                     -- Verhindert Ghost-Feuer wenn GUI gelöscht ist
                     if not screenGui or not screenGui.Parent then return end 
                     cb()
                 end
             end)
+            table.insert(_G.RoseUI_Connections, mainConn)
             
             table.insert(WindowObj.Elements, KeybindAPI)
             return KeybindAPI
