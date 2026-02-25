@@ -210,6 +210,8 @@ function RoseUI:CreateWindow(options)
     title.ZIndex = 6
     title.Parent = headerFrame
     
+    WindowObj.TitleLabel = title
+    
     -- ================= WINDOW CONTROLS =================
     local controlLayout = Instance.new("UIListLayout")
     controlLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -568,14 +570,21 @@ function RoseUI:CreateWindow(options)
         tabIconImg.Size = UDim2.new(0, 18, 0, 18)
         tabIconImg.Position = UDim2.new(0, 8, 0.5, -9)
         tabIconImg.BackgroundTransparency = 1
-        tabIconImg.Image = tabIcon
         tabIconImg.ImageColor3 = Color3.fromRGB(180, 150, 160)
         tabIconImg.ZIndex = 5
         tabIconImg.Parent = tabBtn
 
+        local tabIconText = Instance.new("TextLabel")
+        tabIconText.Size = UDim2.new(0, 18, 0, 18)
+        tabIconText.Position = UDim2.new(0, 8, 0.5, -9)
+        tabIconText.BackgroundTransparency = 1
+        tabIconText.TextColor3 = Color3.fromRGB(180, 150, 160)
+        tabIconText.Font = Enum.Font.GothamBold
+        tabIconText.TextSize = 14
+        tabIconText.ZIndex = 5
+        tabIconText.Parent = tabBtn
+
         local tabLabel = Instance.new("TextLabel")
-        tabLabel.Size = UDim2.new(1, -35, 1, 0)
-        tabLabel.Position = UDim2.new(0, 32, 0, 0)
         tabLabel.BackgroundTransparency = 1
         tabLabel.Text = tabName
         tabLabel.TextColor3 = Color3.fromRGB(180, 150, 160)
@@ -584,6 +593,23 @@ function RoseUI:CreateWindow(options)
         tabLabel.TextSize = 13
         tabLabel.ZIndex = 5
         tabLabel.Parent = tabBtn
+
+        if tabIcon == "" then
+            tabIconImg.Visible = false
+            tabIconText.Visible = false
+            tabLabel.Size = UDim2.new(1, -20, 1, 0)
+            tabLabel.Position = UDim2.new(0, 12, 0, 0)
+        elseif string.match(tabIcon, "rbxassetid://") then
+            tabIconImg.Image = tabIcon
+            tabIconText.Visible = false
+            tabLabel.Size = UDim2.new(1, -35, 1, 0)
+            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+        else
+            tabIconImg.Visible = false
+            tabIconText.Text = tabIcon
+            tabLabel.Size = UDim2.new(1, -35, 1, 0)
+            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+        end
         
         local page = Instance.new("ScrollingFrame")
         page.Size = UDim2.new(1, -20, 1, -20)
@@ -619,6 +645,7 @@ function RoseUI:CreateWindow(options)
                 tweenService:Create(t.Btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
                 tweenService:Create(t.Lbl, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
                 tweenService:Create(t.Img, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(180, 150, 160)}):Play()
+                tweenService:Create(t.TxtIcon, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
             end
 
             -- Neue Page Slide in
@@ -629,6 +656,7 @@ function RoseUI:CreateWindow(options)
             tweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
             tweenService:Create(tabLabel, TweenInfo.new(0.2), {TextColor3 = TEXT_COLOR}):Play()
             tweenService:Create(tabIconImg, TweenInfo.new(0.2), {ImageColor3 = TEXT_COLOR}):Play()
+            tweenService:Create(tabIconText, TweenInfo.new(0.2), {TextColor3 = TEXT_COLOR}):Play()
             
             WindowObj.CurrentTab = page
             task.wait(0.2)
@@ -641,10 +669,11 @@ function RoseUI:CreateWindow(options)
             tabBtn.BackgroundTransparency = 0.1
             tabLabel.TextColor3 = TEXT_COLOR
             tabIconImg.ImageColor3 = TEXT_COLOR
+            tabIconText.TextColor3 = TEXT_COLOR
             WindowObj.CurrentTab = page
         end
         
-        table.insert(WindowObj.Tabs, {Btn = tabBtn, Page = page, Lbl = tabLabel, Img = tabIconImg})
+        table.insert(WindowObj.Tabs, {Btn = tabBtn, Page = page, Lbl = tabLabel, Img = tabIconImg, TxtIcon = tabIconText})
         
         local TabObj = {}
         
