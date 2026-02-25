@@ -1892,85 +1892,102 @@ function RoseUI:CreateWindow(options)
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
 
+            local optBtnCache = {}
+            
             refreshOptions = function(filterText)
-                for _, child in pairs(dropMenu:GetChildren()) do
-                    if child:IsA("TextButton") then child:Destroy() end
-                end
-                
                 local displayedCount = 0
+                local currentListHeight = 0
+                
                 for _, optText in pairs(optionsList) do
-                    if filterText == "" or string.find(string.lower(optText), string.lower(filterText), 1, true) then
+                    local isVisible = filterText == "" or string.find(string.lower(optText), string.lower(filterText), 1, true)
+                    
+                    if isVisible then
                         displayedCount = displayedCount + 1
                         local isSel = table.find(selectedItems, optText) ~= nil
-
-                        local optBtn = Instance.new("TextButton")
-                        optBtn.Size = UDim2.new(1, -6, 0, 25)
+                        
+                        local optBtn = optBtnCache[optText]
+                        if not optBtn then
+                            optBtn = Instance.new("TextButton")
+                            optBtn.Size = UDim2.new(1, -6, 0, 25)
+                            optBtn.Font = Enum.Font.Gotham
+                            optBtn.TextSize = 11
+                            optBtn.TextXAlignment = Enum.TextXAlignment.Left
+                            optBtn.ZIndex = currentZ + 52
+                            optBtn.Parent = dropMenu
+                            Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 2)
+                            
+                            optBtn.MouseEnter:Connect(function() 
+                                if not table.find(selectedItems, optText) then
+                                    tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundTransparency = 0.2, TextColor3 = HEADER_COLOR}):Play() 
+                                end
+                            end)
+                            
+                            optBtn.MouseLeave:Connect(function() 
+                                if not table.find(selectedItems, optText) then
+                                    tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundTransparency = 0, TextColor3 = TEXT_COLOR}):Play() 
+                                end
+                            end)
+    
+                            optBtn.MouseButton1Click:Connect(function()
+                                local idx = table.find(selectedItems, optText)
+                                if idx then
+                                    table.remove(selectedItems, idx)
+                                else
+                                    local isAllTag = string.match(optText, "^%[%s*All")
+                                    if isAllTag then
+                                        selectedItems = {optText}
+                                    else
+                                        for i = #selectedItems, 1, -1 do
+                                            if string.match(selectedItems[i], "^%[%s*All") then
+                                                table.remove(selectedItems, i)
+                                            end
+                                        end
+                                        table.insert(selectedItems, optText)
+                                    end
+                                end
+                                
+                                if #selectedItems == 0 then
+                                    for _, opt in ipairs(optionsList) do
+                                        if string.match(opt, "^%[%s*All") then
+                                            table.insert(selectedItems, opt)
+                                            break
+                                        end
+                                    end
+                                end
+    
+                                DropdownAPI.Value = selectedItems
+                                updateBtnText()
+                                refreshOptions(searchBox.Text) 
+                                cb(selectedItems)
+                            end)
+                            
+                            optBtnCache[optText] = optBtn
+                        end
+                        
                         optBtn.BackgroundColor3 = isSel and HEADER_COLOR or Color3.fromRGB(40, 25, 30)
                         optBtn.BackgroundTransparency = isSel and 0.5 or 0
                         optBtn.Text = "  " .. optText
                         optBtn.TextColor3 = isSel and Color3.new(1,1,1) or TEXT_COLOR
-                        optBtn.Font = Enum.Font.Gotham
-                        optBtn.TextSize = 11
-                        optBtn.TextXAlignment = Enum.TextXAlignment.Left
-                        optBtn.ZIndex = currentZ + 52
-                        optBtn.Parent = dropMenu
-                        Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 2)
-                        
-                        optBtn.MouseEnter:Connect(function() 
-                            if not table.find(selectedItems, optText) then
-                                tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundTransparency = 0.2, TextColor3 = HEADER_COLOR}):Play() 
-                            end
-                        end)
-                        optBtn.MouseLeave:Connect(function() 
-                            if not table.find(selectedItems, optText) then
-                                tweenService:Create(optBtn, TweenInfo.new(0.1), {BackgroundTransparency = 0, TextColor3 = TEXT_COLOR}):Play() 
-                            end
-                        end)
-
-                        optBtn.MouseButton1Click:Connect(function()
-                            local idx = table.find(selectedItems, optText)
-                            if idx then
-                                table.remove(selectedItems, idx)
-                            else
-                                -- Mutually Exclusive Check for "[ All ... ]" tags
-                                local isAllTag = string.match(optText, "^%[%s*All")
-                                if isAllTag then
-                                    -- If they clicked "All", clear everything else
-                                    selectedItems = {optText}
-                                else
-                                    -- If they clicked a specific item, remove any "All" tags currently active
-                                    for i = #selectedItems, 1, -1 do
-                                        if string.match(selectedItems[i], "^%[%s*All") then
-                                            table.remove(selectedItems, i)
-                                        end
-                                    end
-                                    table.insert(selectedItems, optText)
-                                end
-                            end
-                            
-                            -- If list is empty, default back to the "All" tag if one exists in options
-                            if #selectedItems == 0 then
-                                for _, opt in ipairs(optionsList) do
-                                    if string.match(opt, "^%[%s*All") then
-                                        table.insert(selectedItems, opt)
-                                        break
-                                    end
-                                end
-                            end
-
-                            DropdownAPI.Value = selectedItems
-                            updateBtnText()
-                            refreshOptions(searchBox.Text) -- Redraw to update colors
-                            cb(selectedItems)
-                        end)
+                        optBtn.Visible = true
+                        currentListHeight = currentListHeight + 25
+                    else
+                        if optBtnCache[optText] then
+                            optBtnCache[optText].Visible = false
+                        end
                     end
                 end
                 
-                local listHeight = displayedCount * 25
-                dropMenu.CanvasSize = UDim2.new(0, 0, 0, listHeight)
+                for cachedText, btn in pairs(optBtnCache) do
+                    if not table.find(optionsList, cachedText) then
+                        btn:Destroy()
+                        optBtnCache[cachedText] = nil
+                    end
+                end
+                
+                dropMenu.CanvasSize = UDim2.new(0, 0, 0, currentListHeight)
                 
                 if isOpen then
-                    local maxH = math.clamp(listHeight + 36, 60, 200)
+                    local maxH = math.clamp(currentListHeight + 36, 60, 200)
                     tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, maxH)}):Play()
                 end
             end
