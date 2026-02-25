@@ -1127,6 +1127,7 @@ function RoseUI:CreateWindow(options)
             local max = tsOptions.Max or 100
             local defSlider = tsOptions.DefaultSlider or math.floor((min + max) / 2)
             local defToggle = tsOptions.DefaultToggle or false
+            local suffix = tsOptions.Suffix or ""
             local cbToggle = tsOptions.OnToggle or function() end
             local cbSlider = tsOptions.OnSlider or function() end
             
@@ -1185,7 +1186,7 @@ function RoseUI:CreateWindow(options)
             local valueLabel = Instance.new("TextLabel")
             valueLabel.Size = UDim2.new(1, 0, 1, 0)
             valueLabel.BackgroundTransparency = 1
-            valueLabel.Text = tostring(defSlider)
+            valueLabel.Text = tostring(defSlider) .. suffix
             valueLabel.TextColor3 = HEADER_COLOR
             valueLabel.TextSize = 12
             valueLabel.Font = Enum.Font.GothamBold
@@ -1263,7 +1264,7 @@ function RoseUI:CreateWindow(options)
                 
                 local clamped = math.clamp(value, min, max)
                 tsAPI.SliderValue = clamped
-                valueLabel.Text = tostring(clamped)
+                valueLabel.Text = tostring(clamped) .. suffix
                 tweenService:Create(slideInner, TweenInfo.new(0.08), {Size = UDim2.new(percentage, 0, 1, 0)}):Play()
                 cbSlider(clamped)
             end
@@ -1296,7 +1297,7 @@ function RoseUI:CreateWindow(options)
             function tsAPI:SetSlider(val)
                 local clamped = math.clamp(val, min, max)
                 tsAPI.SliderValue = clamped
-                valueLabel.Text = tostring(clamped)
+                valueLabel.Text = tostring(clamped) .. suffix
                 local percentage = (clamped - min) / (max - min)
                 tweenService:Create(slideInner, TweenInfo.new(0.08), {Size = UDim2.new(percentage, 0, 1, 0)}):Play()
                 cbSlider(clamped)
