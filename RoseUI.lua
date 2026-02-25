@@ -645,7 +645,9 @@ function RoseUI:CreateWindow(options)
                 tweenService:Create(t.Btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
                 tweenService:Create(t.Lbl, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
                 tweenService:Create(t.Img, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(180, 150, 160)}):Play()
-                tweenService:Create(t.TxtIcon, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
+                if t.TxtIcon then
+                    tweenService:Create(t.TxtIcon, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
+                end
             end
 
             -- Neue Page Slide in
