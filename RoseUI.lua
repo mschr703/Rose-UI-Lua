@@ -719,6 +719,7 @@ function RoseUI:CreateWindow(options)
             proxyMethod("AddButton")
             proxyMethod("AddToggle")
             proxyMethod("AddSlider")
+            proxyMethod("AddToggleSlider")
             proxyMethod("AddDropdown")
             proxyMethod("AddSearchDropdown")
             proxyMethod("AddTargetList")
@@ -1117,6 +1118,193 @@ function RoseUI:CreateWindow(options)
             
             table.insert(WindowObj.Elements, SliderAPI)
             return SliderAPI
+        end
+
+        -- 3.5 TOGGLE-SLIDER (Hybrid Component)
+        function TabObj:AddToggleSlider(tsOptions)
+            local tsName = tsOptions.Name or "ToggleSlider"
+            local min = tsOptions.Min or 0
+            local max = tsOptions.Max or 100
+            local defSlider = tsOptions.DefaultSlider or math.floor((min + max) / 2)
+            local defToggle = tsOptions.DefaultToggle or false
+            local cbToggle = tsOptions.OnToggle or function() end
+            local cbSlider = tsOptions.OnSlider or function() end
+            
+            local tsFrame = Instance.new("Frame")
+            tsFrame.Size = UDim2.new(1, -10, 0, 70)
+            tsFrame.BackgroundColor3 = CARD_COLOR
+            tsFrame.ZIndex = 11
+            tsFrame.Parent = page
+            Instance.new("UICorner", tsFrame).CornerRadius = UDim.new(0, 6)
+            
+            local titleLbl = Instance.new("TextLabel")
+            titleLbl.Size = UDim2.new(1, -60, 0, 30)
+            titleLbl.Position = UDim2.new(0, 15, 0, 5)
+            titleLbl.BackgroundTransparency = 1
+            titleLbl.Text = tsName
+            titleLbl.TextColor3 = TEXT_COLOR
+            titleLbl.TextSize = 13
+            titleLbl.Font = Enum.Font.GothamSemibold
+            titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+            titleLbl.ZIndex = 12
+            titleLbl.Parent = tsFrame
+
+            local toggleBtn = Instance.new("TextButton")
+            toggleBtn.Size = UDim2.new(0, 44, 0, 22)
+            toggleBtn.Position = UDim2.new(1, -55, 0, 9)
+            toggleBtn.BackgroundColor3 = defToggle and HEADER_COLOR or Color3.fromRGB(30, 15, 20)
+            toggleBtn.Text = ""
+            toggleBtn.ZIndex = 12
+            toggleBtn.Parent = tsFrame
+            Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
+
+            local circle = Instance.new("Frame")
+            circle.Size = UDim2.new(0, 18, 0, 18)
+            circle.Position = UDim2.new(0, defToggle and 24 or 2, 0.5, -9)
+            circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            circle.ZIndex = 13
+            circle.Parent = toggleBtn
+            Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+
+            local outline = Instance.new("UIStroke")
+            outline.Color = HEADER_COLOR
+            outline.Transparency = defToggle and 0 or 0.8
+            outline.Thickness = 1
+            outline.Parent = toggleBtn
+
+            local isToggled = defToggle
+
+            local highlightBox = Instance.new("Frame")
+            highlightBox.Size = UDim2.new(0, 45, 0, 20)
+            highlightBox.Position = UDim2.new(1, -55, 0, 40)
+            highlightBox.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+            highlightBox.ZIndex = 12
+            highlightBox.Parent = tsFrame
+            Instance.new("UICorner", highlightBox).CornerRadius = UDim.new(0, 4)
+
+            local valueLabel = Instance.new("TextLabel")
+            valueLabel.Size = UDim2.new(1, 0, 1, 0)
+            valueLabel.BackgroundTransparency = 1
+            valueLabel.Text = tostring(defSlider)
+            valueLabel.TextColor3 = HEADER_COLOR
+            valueLabel.TextSize = 12
+            valueLabel.Font = Enum.Font.GothamBold
+            valueLabel.ZIndex = 13
+            valueLabel.Parent = highlightBox
+
+            local slideBg = Instance.new("Frame")
+            slideBg.Size = UDim2.new(1, -85, 0, 6)
+            slideBg.Position = UDim2.new(0, 15, 0, 47)
+            slideBg.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+            slideBg.ZIndex = 12
+            slideBg.Parent = tsFrame
+            Instance.new("UICorner", slideBg).CornerRadius = UDim.new(1, 0)
+
+            local slideInner = Instance.new("Frame")
+            slideInner.Size = UDim2.new((defSlider - min) / (max - min), 0, 1, 0)
+            slideInner.BackgroundColor3 = HEADER_COLOR
+            slideInner.ZIndex = 13
+            slideInner.Parent = slideBg
+            Instance.new("UICorner", slideInner).CornerRadius = UDim.new(1, 0)
+
+            local knob = Instance.new("Frame")
+            knob.Size = UDim2.new(0, 14, 0, 14)
+            knob.Position = UDim2.new(1, -7, 0.5, -7)
+            knob.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+            knob.ZIndex = 14
+            knob.Parent = slideInner
+            Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+
+            local slideBtn = Instance.new("TextButton")
+            slideBtn.Size = UDim2.new(1, 0, 1, 20)
+            slideBtn.Position = UDim2.new(0, 0, 0, -10)
+            slideBtn.BackgroundTransparency = 1
+            slideBtn.Text = ""
+            slideBtn.ZIndex = 15
+            slideBtn.Parent = slideBg
+
+            local tsAPI = {
+                Name = tsName,
+                Type = "ToggleSlider",
+                ToggleValue = defToggle,
+                SliderValue = defSlider
+            }
+
+            local function fireToggle()
+                isToggled = not isToggled
+                tsAPI.ToggleValue = isToggled
+                local colorGoal = isToggled and HEADER_COLOR or Color3.fromRGB(30, 15, 20)
+                local posGoal = isToggled and UDim2.new(0, 24, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+                local outlineAlpha = isToggled and 0 or 0.8
+
+                tweenService:Create(toggleBtn, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {BackgroundColor3 = colorGoal}):Play()
+                tweenService:Create(circle, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = posGoal}):Play()
+                tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = outlineAlpha}):Play()
+
+                cbToggle(isToggled)
+            end
+
+            local btnOverlay = Instance.new("TextButton")
+            btnOverlay.Size = UDim2.new(1, 0, 0, 35) 
+            btnOverlay.BackgroundTransparency = 1
+            btnOverlay.Text = ""
+            btnOverlay.ZIndex = 14
+            btnOverlay.Parent = tsFrame
+
+            btnOverlay.MouseButton1Click:Connect(fireToggle)
+
+            local isDragging = false
+            local UserInputService = game:GetService("UserInputService")
+
+            local function updateSlider(input)
+                local relativeX = math.clamp(input.Position.X - slideBg.AbsolutePosition.X, 0, slideBg.AbsoluteSize.X)
+                local percentage = relativeX / slideBg.AbsoluteSize.X
+                local value = math.floor(min + (max - min) * percentage)
+                
+                local clamped = math.clamp(value, min, max)
+                tsAPI.SliderValue = clamped
+                valueLabel.Text = tostring(clamped)
+                tweenService:Create(slideInner, TweenInfo.new(0.08), {Size = UDim2.new(percentage, 0, 1, 0)}):Play()
+                cbSlider(clamped)
+            end
+
+            slideBtn.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    isDragging = true
+                    tweenService:Create(knob, TweenInfo.new(0.2), {Size = UDim2.new(0, 18, 0, 18), Position = UDim2.new(1, -9, 0.5, -9)}):Play()
+                    updateSlider(input)
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    isDragging = false
+                    tweenService:Create(knob, TweenInfo.new(0.2), {Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(1, -7, 0.5, -7)}):Play()
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    updateSlider(input)
+                end
+            end)
+            
+            function tsAPI:SetToggle(state)
+                if isToggled ~= state then fireToggle() end
+            end
+            
+            function tsAPI:SetSlider(val)
+                local clamped = math.clamp(val, min, max)
+                tsAPI.SliderValue = clamped
+                valueLabel.Text = tostring(clamped)
+                local percentage = (clamped - min) / (max - min)
+                tweenService:Create(slideInner, TweenInfo.new(0.08), {Size = UDim2.new(percentage, 0, 1, 0)}):Play()
+                cbSlider(clamped)
+            end
+
+            tsAPI.Instance = tsFrame
+            table.insert(WindowObj.Elements, tsAPI)
+            return tsAPI
         end
 
         -- 4. FANCY DROPDOWN (Premium Animations)
