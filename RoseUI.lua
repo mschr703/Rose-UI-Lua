@@ -499,7 +499,8 @@ function RoseUI:CreateWindow(options)
         Elements = {},
         ConfigFolder = options.ConfigFolder or "RoseHubConfigs",
         ID = currentID,
-        TitleLabel = title
+        TitleLabel = title,
+        HubTypeLabel = hubTypeText
     }
     
     if makefolder and not isfolder(WindowObj.ConfigFolder) then
