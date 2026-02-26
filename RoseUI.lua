@@ -210,8 +210,6 @@ function RoseUI:CreateWindow(options)
     title.ZIndex = 6
     title.Parent = headerFrame
     
-    WindowObj.TitleLabel = title
-    
     -- ================= WINDOW CONTROLS =================
     local controlLayout = Instance.new("UIListLayout")
     controlLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -500,7 +498,8 @@ function RoseUI:CreateWindow(options)
         Tabs = {},
         Elements = {},
         ConfigFolder = options.ConfigFolder or "RoseHubConfigs",
-        ID = currentID
+        ID = currentID,
+        TitleLabel = title
     }
     
     if makefolder and not isfolder(WindowObj.ConfigFolder) then
