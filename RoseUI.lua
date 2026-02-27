@@ -133,6 +133,28 @@ function RoseUI:CreateWindow(options)
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     screenGui.Parent = targetContainer
+
+    local openBtnGui = Instance.new("ScreenGui")
+    openBtnGui.Name = "RoseUI_OpenBtn"
+    openBtnGui.ResetOnSpawn = false
+    openBtnGui.Enabled = false
+    openBtnGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    openBtnGui.Parent = targetContainer
+
+    local mobileOpenBtn = Instance.new("TextButton")
+    mobileOpenBtn.Size = UDim2.new(0, 50, 0, 50)
+    mobileOpenBtn.Position = UDim2.new(0.5, -25, 0, 10)
+    mobileOpenBtn.BackgroundColor3 = CARD_COLOR
+    mobileOpenBtn.Text = "🌹"
+    mobileOpenBtn.TextSize = 24
+    mobileOpenBtn.ZIndex = 100
+    mobileOpenBtn.Parent = openBtnGui
+    Instance.new("UICorner", mobileOpenBtn).CornerRadius = UDim.new(1, 0)
+
+    local mbStroke = Instance.new("UIStroke")
+    mbStroke.Color = HEADER_COLOR
+    mbStroke.Thickness = 2
+    mbStroke.Parent = mobileOpenBtn
     
     -- Main Container
     local dragFrame = Instance.new("Frame")
@@ -267,12 +289,14 @@ function RoseUI:CreateWindow(options)
     -- Minimize / Toggle Logic
     local function ToggleUI()
         screenGui.Enabled = not screenGui.Enabled
+        openBtnGui.Enabled = not screenGui.Enabled
         if not screenGui.Enabled then
-            RoseUI:Notify({Title = "🌹 Hub Minimized", Text = "Press Right Alt to reopen the Hub.", Duration = 4})
+            RoseUI:Notify({Title = "🌹 Hub Minimized", Text = "Tap the 🌹 icon at the top or press Right Alt to reopen.", Duration = 4})
         end
     end
     
     minBtn.MouseButton1Click:Connect(ToggleUI)
+    mobileOpenBtn.MouseButton1Click:Connect(ToggleUI)
     
     local inputConnection
     inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -2013,6 +2037,8 @@ function RoseUI:CreateWindow(options)
             searchBox.Text = ""
             searchBox.TextColor3 = TEXT_COLOR
             searchBox.ClearTextOnFocus = false
+            searchBox.Active = true
+            searchBox.Interactable = true
             searchBox.PlaceholderColor3 = Color3.fromRGB(150, 120, 130)
             searchBox.Font = Enum.Font.Gotham
             searchBox.TextSize = 11
@@ -2710,6 +2736,9 @@ function RoseUI:CreateWindow(options)
             tBox.PlaceholderText = placeholder
             tBox.TextColor3 = TEXT_COLOR
             tBox.PlaceholderColor3 = Color3.fromRGB(150, 120, 130)
+            tBox.ClearTextOnFocus = false
+            tBox.Active = true
+            tBox.Interactable = true
             tBox.TextSize = 12
             tBox.Font = Enum.Font.Gotham
             tBox.Parent = tbFrame
