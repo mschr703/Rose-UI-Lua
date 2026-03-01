@@ -385,8 +385,8 @@ function RoseUI:CreateWindow(options)
     headerFrame.Parent = dragFrame
     
     local headerLogo = Instance.new("ImageLabel")
-    headerLogo.Size = UDim2.new(0, 60, 0, 60)
-    headerLogo.Position = UDim2.new(0, 2, 0.5, -25)
+    headerLogo.Size = UDim2.new(0, 40, 0, 40)
+    headerLogo.Position = UDim2.new(0, 8, 0.5, -20)
     headerLogo.BackgroundTransparency = 1
     headerLogo.Image = "rbxassetid://135043831839832" -- Fallback
     headerLogo.ScaleType = Enum.ScaleType.Fit
@@ -398,7 +398,7 @@ function RoseUI:CreateWindow(options)
         if getasset and type(getasset) == "function" then
             if not isfolder("RoseHub") then makefolder("RoseHub") end
             if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
-            local path = "RoseHub/assets/rose_logo_v3.png"
+            local path = "RoseHub/assets/rose_logo_v3_small.png"
             if not isfile(path) then
                 local success, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/roselogo.png") end)
                 if success and data then writefile(path, data) end
