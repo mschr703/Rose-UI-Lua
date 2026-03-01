@@ -56,8 +56,9 @@ function RoseUI:Init()
     if RoseUI.CurrentWindow then
         task.spawn(function()
             pcall(function()
-                if isfile and readfile and isfile("RoseHub/autoload.txt") then
-                    local autoloadFile = readfile("RoseHub/autoload.txt")
+                local autoloadPath = RoseUI.CurrentWindow.ConfigFolder .. "/autoload.txt"
+                if isfile and readfile and isfile(autoloadPath) then
+                    local autoloadFile = readfile(autoloadPath)
                     if autoloadFile and autoloadFile ~= "" then
                         task.delay(0.5, function()
                             RoseUI.CurrentWindow:LoadConfig(autoloadFile)
@@ -866,7 +867,7 @@ function RoseUI:CreateWindow(options)
         CurrentTab = nil,
         Tabs = {},
         Elements = {},
-        ConfigFolder = "RoseHub/configs",
+        ConfigFolder = options.ConfigFolder or "RoseHub/configs",
         ConfigRefreshListener = function() end,
         ID = currentID,
         TitleLabel = title,
@@ -3551,7 +3552,7 @@ function RoseUI:CreateWindow(options)
                 end
                 pcall(function()
                     if writefile then
-                        writefile("RoseHub/autoload.txt", selectedConfig)
+                        writefile(WindowObj.ConfigFolder .. "/autoload.txt", selectedConfig)
                         RoseUI:Notify({Title = "🌹 Config Autoload", Text = selectedConfig .. " set to auto-load.", Duration = 4})
                     end
                 end)
@@ -3576,6 +3577,7 @@ function RoseUI:CreateWindow(options)
         ForceSeparator = true,
         LayoutOrder = 9997
     })
+    WindowObj.SettingsTab = SettingsTab
     local settingsSec = SettingsTab:AddSection("Window Settings ⚙️")
     SettingsTab:AddKeybind({
         Name = "Toggle Hub UI",
@@ -3734,6 +3736,7 @@ function RoseUI:CreateWindow(options)
         NoSeparator = true,
         LayoutOrder = 9998
     })
+    WindowObj.DebugTab = DebugTab
     
     local toolsSec = DebugTab:AddSection("Tools")
     
@@ -3794,6 +3797,7 @@ function RoseUI:CreateWindow(options)
         NoSeparator = true,
         LayoutOrder = 9999
     })
+    WindowObj.ConfigTab = ConfigTab
     WindowObj:CreateConfigManager(ConfigTab)
 
     -- ================= INTRO ANIMATION =================
