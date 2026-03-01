@@ -409,7 +409,7 @@ function RoseUI:CreateWindow(options)
     
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, -150, 1, 0)
-    title.Position = UDim2.new(0, 52, 0, 0) -- Adjusted text closer to logo
+    title.Position = UDim2.new(0, 42, 0, 0) -- Text is now closer to the smaller logo
     title.BackgroundTransparency = 1
     title.Text = titleText
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
