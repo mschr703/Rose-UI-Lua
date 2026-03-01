@@ -7,14 +7,68 @@ local coreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
--- Design Colors (Solid, Matching aesthetic)
-local HEADER_COLOR = Color3.fromRGB(220, 160, 255)
-local SIDEBAR_COLOR = Color3.fromRGB(15, 12, 18)
-local CONTENT_COLOR = Color3.fromRGB(15, 12, 18)
-local CARD_COLOR = Color3.fromRGB(25, 20, 25)
-local TEXT_COLOR = Color3.fromRGB(255, 240, 245)
+local RoseUI_Themes = {
+    ["Dark Rose"] = {
+        Header = Color3.fromRGB(190, 25, 45),
+        Sidebar = Color3.fromRGB(15, 12, 12),
+        Content = Color3.fromRGB(15, 12, 12),
+        Card = Color3.fromRGB(25, 18, 20),
+        Text = Color3.fromRGB(255, 235, 240)
+    },
+    ["Ocean Blue"] = {
+        Header = Color3.fromRGB(30, 100, 210),
+        Sidebar = Color3.fromRGB(12, 14, 20),
+        Content = Color3.fromRGB(12, 14, 20),
+        Card = Color3.fromRGB(18, 22, 30),
+        Text = Color3.fromRGB(235, 245, 255)
+    },
+    ["Forest Green"] = {
+        Header = Color3.fromRGB(40, 160, 60),
+        Sidebar = Color3.fromRGB(12, 18, 14),
+        Content = Color3.fromRGB(12, 18, 14),
+        Card = Color3.fromRGB(18, 26, 20),
+        Text = Color3.fromRGB(240, 255, 240)
+    }
+}
+
+local currentThemeName = "Dark Rose"
+pcall(function()
+    if isfile and readfile and isfile("RoseHub/theme.txt") then
+        local savedTheme = readfile("RoseHub/theme.txt")
+        if RoseUI_Themes[savedTheme] then
+            currentThemeName = savedTheme
+        end
+    end
+end)
+
+local activeTheme = RoseUI_Themes[currentThemeName]
+
+-- Design Colors (Loaded dynamically)
+local HEADER_COLOR = activeTheme.Header
+local SIDEBAR_COLOR = activeTheme.Sidebar
+local CONTENT_COLOR = activeTheme.Content
+local CARD_COLOR = activeTheme.Card
+local TEXT_COLOR = activeTheme.Text
 
 local GLOBAL_ZINDEX = 1
+
+function RoseUI:Init()
+    if RoseUI.CurrentWindow then
+        task.spawn(function()
+            pcall(function()
+                if isfile and readfile and isfile("RoseHub/autoload.txt") then
+                    local autoloadFile = readfile("RoseHub/autoload.txt")
+                    if autoloadFile and autoloadFile ~= "" then
+                        task.delay(0.5, function()
+                            RoseUI.CurrentWindow:LoadConfig(autoloadFile)
+                            RoseUI:Notify({Title = "🌹 Autoload", Text = "Loaded config: " .. autoloadFile, Duration = 4})
+                        end)
+                    end
+                end
+            end)
+        end)
+    end
+end
 
 function RoseUI:Notify(options)
     local title = options.Title or "Notification"
@@ -36,9 +90,63 @@ function RoseUI:Notify(options)
     notifFrame.Size = UDim2.new(0, 250, 0, 70)
     notifFrame.Position = UDim2.new(1, 10, 1, -80)
     notifFrame.BackgroundColor3 = CARD_COLOR
+    notifFrame.BackgroundTransparency = 0.25 -- Acrylic look
     notifFrame.BorderSizePixel = 0
     notifFrame.Parent = notifGui
     Instance.new("UICorner", notifFrame).CornerRadius = UDim.new(0, 6)
+    
+    -- ACRYLIC BLUR TRICK FOR NOTIFICATION
+    local camera = workspace.CurrentCamera
+    local blurPart = Instance.new("Part")
+    blurPart.Name = "NotifAcrylicBlur"
+    blurPart.Material = Enum.Material.Glass
+    blurPart.Color = Color3.fromRGB(0, 0, 0)
+    blurPart.Transparency = 0.999
+    blurPart.Reflectance = 0
+    blurPart.CastShadow = false
+    blurPart.CanCollide = false
+    blurPart.CanQuery = false
+    blurPart.Anchored = true
+    blurPart.Parent = camera
+    
+    if not game:GetService("Lighting"):FindFirstChild("AcrylicDoF") then
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.Name = "AcrylicDoF"
+        dof.FarIntensity = 0
+        dof.NearIntensity = 0.8
+        dof.FocusDistance = 10
+        dof.InFocusRadius = 20
+        dof.Parent = game:GetService("Lighting")
+    end
+    
+    local blurConn = game:GetService("RunService").RenderStepped:Connect(function()
+        if not notifFrame or not notifFrame.Parent then
+            pcall(function() blurPart:Destroy() end)
+            return
+        end
+        local insetX = 6
+        local insetY = 10
+        local size = notifFrame.AbsoluteSize - Vector2.new(insetX * 2, insetY * 2)
+        local pos = notifFrame.AbsolutePosition + Vector2.new(insetX, insetY)
+        
+        -- Fix Roblox TopBar Offset calculation natively
+        local topbarOffset = game:GetService("GuiService"):GetGuiInset().Y
+        pos = Vector2.new(pos.X, pos.Y + topbarOffset - 4)
+        
+        local z = 0.2
+        local fov = math.rad(camera.FieldOfView)
+        local h = 2 * math.tan(fov / 2) * z
+        local w = h * (camera.ViewportSize.X / camera.ViewportSize.Y)
+        
+        local sizeX = (size.X / camera.ViewportSize.X) * w
+        local sizeY = (size.Y / camera.ViewportSize.Y) * h
+        local posX = (pos.X / camera.ViewportSize.X) * w - w / 2 + sizeX / 2
+        local posY = -(pos.Y / camera.ViewportSize.Y) * h + h / 2 - sizeY / 2
+        
+        blurPart.Size = Vector3.new(math.max(0.001, sizeX), math.max(0.001, sizeY), 0)
+        blurPart.CFrame = camera.CFrame * CFrame.new(posX, posY, -z)
+    end)
+    table.insert(_G.RoseUI_Connections, blurConn)
     
     local stroke = Instance.new("UIStroke")
     stroke.Color = HEADER_COLOR
@@ -91,6 +199,8 @@ function RoseUI:Notify(options)
         local out = tweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, notifFrame.Position.Y.Offset)})
         out:Play()
         out.Completed:Wait()
+        pcall(function() blurPart:Destroy() end)
+        pcall(function() blurConn:Disconnect() end)
         notifFrame:Destroy()
     end)
 end
@@ -132,6 +242,7 @@ function RoseUI:CreateWindow(options)
     screenGui.Name = "RoseUI_Window"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    screenGui.IgnoreGuiInset = true
     screenGui.Parent = targetContainer
 
     local openBtnGui = Instance.new("ScreenGui")
@@ -159,14 +270,66 @@ function RoseUI:CreateWindow(options)
     -- Main Container
     local dragFrame = Instance.new("Frame")
     dragFrame.Name = "DragBox"
-    dragFrame.Size = UDim2.new(0, 650, 0, 450)
-    local DEFAULT_SIZE = UDim2.new(0, 650, 0, 450)
-    dragFrame.Position = UDim2.new(0.5, -325, 0.5, -225)
+    dragFrame.Size = UDim2.new(0, 650, 0, 520)
+    local DEFAULT_SIZE = UDim2.new(0, 650, 0, 520)
+    dragFrame.Position = UDim2.new(0.5, -325, 0.5, -260)
     dragFrame.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
-    dragFrame.BackgroundTransparency = 0.2 -- Glassy look
+    dragFrame.BackgroundTransparency = 0.15 -- Less transparent, darker background
     dragFrame.Active = true
     dragFrame.Parent = screenGui
     Instance.new("UICorner", dragFrame).CornerRadius = UDim.new(0, 8)
+    
+    -- ACRYLIC BLUR TRICK
+    local camera = workspace.CurrentCamera
+    local blurPart = Instance.new("Part")
+    blurPart.Name = "AcrylicBlur"
+    blurPart.Material = Enum.Material.Glass
+    blurPart.Color = Color3.fromRGB(0, 0, 0)
+    blurPart.Transparency = 0.995 -- Needs to be slightly opaque for glass blur to render!
+    blurPart.Reflectance = 0
+    blurPart.CastShadow = false
+    blurPart.CanCollide = false
+    blurPart.CanQuery = false
+    blurPart.Anchored = true
+    blurPart.Parent = camera
+    
+    local dof = Instance.new("DepthOfFieldEffect")
+    dof.Name = "AcrylicDoF"
+    dof.FarIntensity = 0
+    dof.NearIntensity = 0.8
+    dof.FocusDistance = 10
+    dof.InFocusRadius = 20
+    dof.Parent = game:GetService("Lighting")
+    
+    local blurConn = game:GetService("RunService").RenderStepped:Connect(function()
+        if not dragFrame or not dragFrame.Parent or not screenGui.Enabled then
+            blurPart.CFrame = CFrame.new(0, 9999, 0)
+            return
+        end
+        -- Inset the blur slightly to avoid bleeding past the rounded corners
+        local insetX = 6
+        local insetY = 10
+        local size = dragFrame.AbsoluteSize - Vector2.new(insetX * 2, insetY * 2)
+        local pos = dragFrame.AbsolutePosition + Vector2.new(insetX, insetY)
+        
+        -- Fix Roblox TopBar Offset calculation natively (and add extra 4px padding so it hides under topbar)
+        local topbarOffset = game:GetService("GuiService"):GetGuiInset().Y
+        pos = Vector2.new(pos.X, pos.Y + topbarOffset - 4)
+        
+        local z = 0.2
+        local fov = math.rad(camera.FieldOfView)
+        local h = 2 * math.tan(fov / 2) * z
+        local w = h * (camera.ViewportSize.X / camera.ViewportSize.Y)
+        
+        local sizeX = (size.X / camera.ViewportSize.X) * w
+        local sizeY = (size.Y / camera.ViewportSize.Y) * h
+        local posX = (pos.X / camera.ViewportSize.X) * w - w / 2 + sizeX / 2
+        local posY = -(pos.Y / camera.ViewportSize.Y) * h + h / 2 - sizeY / 2
+        
+        blurPart.Size = Vector3.new(sizeX, sizeY, 0)
+        blurPart.CFrame = camera.CFrame * CFrame.new(posX, posY, -z)
+    end)
+    table.insert(_G.RoseUI_Connections, blurConn)
     
     -- Custom Dragging Logic (damit Resize nicht verbuggt)
     local dragging, dragInput, dragStart, startPos
@@ -220,9 +383,32 @@ function RoseUI:CreateWindow(options)
     headerFrame.ZIndex = 5
     headerFrame.Parent = dragFrame
     
+    local headerLogo = Instance.new("ImageLabel")
+    headerLogo.Size = UDim2.new(0, 60, 0, 60)
+    headerLogo.Position = UDim2.new(0, 2, 0.5, -25)
+    headerLogo.BackgroundTransparency = 1
+    headerLogo.Image = "rbxassetid://135043831839832" -- Fallback
+    headerLogo.ScaleType = Enum.ScaleType.Fit
+    headerLogo.ZIndex = 6
+    headerLogo.Parent = headerFrame
+
+    task.spawn(function()
+        local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
+        if getasset and type(getasset) == "function" then
+            if not isfolder("RoseHub") then makefolder("RoseHub") end
+            if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
+            local path = "RoseHub/assets/rose_logo_v3.png"
+            if not isfile(path) then
+                local success, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/roselogo.png") end)
+                if success and data then writefile(path, data) end
+            end
+            if isfile(path) then headerLogo.Image = getasset(path) end
+        end
+    end)
+    
     local title = Instance.new("TextLabel")
     title.Size = UDim2.new(1, -150, 1, 0)
-    title.Position = UDim2.new(0, 20, 0, 0)
+    title.Position = UDim2.new(0, 52, 0, 0) -- Adjusted text closer to logo
     title.BackgroundTransparency = 1
     title.Text = titleText
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -241,8 +427,8 @@ function RoseUI:CreateWindow(options)
     controlLayout.Padding = UDim.new(0, 8)
     
     local controlsFrame = Instance.new("Frame")
-    controlsFrame.Size = UDim2.new(0, 120, 1, 0)
-    controlsFrame.Position = UDim2.new(1, -135, 0, 0)
+    controlsFrame.Size = UDim2.new(0, 160, 1, 0)
+    controlsFrame.Position = UDim2.new(1, -175, 0, 0)
     controlsFrame.BackgroundTransparency = 1
     controlsFrame.ZIndex = 6
     controlsFrame.Parent = headerFrame
@@ -266,15 +452,112 @@ function RoseUI:CreateWindow(options)
         return btn
     end
 
+    local discordBtn = createControlBtn("", 0)
+    
+    local discordIcon = Instance.new("ImageLabel")
+    discordIcon.Size = UDim2.new(0, 16, 0, 16)
+    discordIcon.Position = UDim2.new(0.5, -8, 0.5, -8)
+    discordIcon.BackgroundTransparency = 1
+    discordIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
+    discordIcon.ScaleType = Enum.ScaleType.Fit
+    discordIcon.ZIndex = 6
+    discordIcon.Parent = discordBtn
+
+    discordBtn.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard("https://discord.gg/rosehub")
+            RoseUI:Notify({Title = "Discord", Text = "Copied Discord link to clipboard!", Duration = 3})
+        end
+    end)
+    
+    discordBtn.MouseEnter:Connect(function() tweenService:Create(discordIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end)
+    discordBtn.MouseLeave:Connect(function() tweenService:Create(discordIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
+
     local minBtn = createControlBtn("-", 1)
-    local maxBtn = createControlBtn("□", 2)
-    local closeBtn = createControlBtn("X", 3)
-    closeBtn.TextSize = 16
+    local maxBtn = createControlBtn("", 2)
+    
+    local maxIcon = Instance.new("ImageLabel")
+    maxIcon.Size = UDim2.new(0, 14, 0, 14)
+    maxIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
+    maxIcon.BackgroundTransparency = 1
+    maxIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
+    maxIcon.ScaleType = Enum.ScaleType.Fit
+    maxIcon.ZIndex = 6
+    maxIcon.Parent = maxBtn
+    
+    local closeBtn = createControlBtn("", 3)
+    
+    local closeIcon = Instance.new("ImageLabel")
+    closeIcon.Size = UDim2.new(0, 14, 0, 14)
+    closeIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
+    closeIcon.BackgroundTransparency = 1
+    closeIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
+    closeIcon.ScaleType = Enum.ScaleType.Fit
+    closeIcon.ZIndex = 6
+    closeIcon.Parent = closeBtn
+    
+    task.spawn(function()
+        local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
+        if getasset and type(getasset) == "function" then
+            if not isfolder("RoseHub") then makefolder("RoseHub") end
+            if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
+            
+            -- Reverting to Standard Cursor per User Request            
+            -- Load Discord / GitHub icon
+            local discordPath = "RoseHub/assets/discordlogo.png"
+            if not isfile(discordPath) then
+                local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/discordlogo.png") end)
+                if s and d then writefile(discordPath, d) end
+            end
+            if isfile(discordPath) then discordIcon.Image = getasset(discordPath) end
+
+            -- Load Tabout icon
+            local taboutPath = "RoseHub/assets/tabout_white.png"
+            if not isfile(taboutPath) then
+                local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/tabout.png") end)
+                if s and d then writefile(taboutPath, d) end
+            end
+            if isfile(taboutPath) then maxIcon.Image = getasset(taboutPath) end
+            
+            -- Load Cross icon
+            local crossPath = "RoseHub/assets/cross_white.png"
+            if not isfile(crossPath) then
+                local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/cross.png") end)
+                if s and d then writefile(crossPath, d) end
+            end
+            if isfile(crossPath) then closeIcon.Image = getasset(crossPath) end
+        end
+    end)
+    
+    maxBtn.MouseEnter:Connect(function() tweenService:Create(maxIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end)
+    maxBtn.MouseLeave:Connect(function() tweenService:Create(maxIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
+    
+    closeBtn.MouseEnter:Connect(function() tweenService:Create(closeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end)
+    closeBtn.MouseLeave:Connect(function() tweenService:Create(closeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
 
     local isMinimized = false
     local isMaximized = false
     local preMaxSize = DEFAULT_SIZE
-    local preMaxPos = UDim2.new(0.5, -325, 0.5, -225)
+    local preMaxPos = UDim2.new(0.5, -325, 0.5, -260)
+
+    -- Header Separator Line
+    local headerLine = Instance.new("Frame")
+    headerLine.Name = "HeaderLine"
+    headerLine.Size = UDim2.new(1, 0, 0, 1)
+    headerLine.Position = UDim2.new(0, 0, 0, 45)
+    headerLine.BackgroundColor3 = HEADER_COLOR
+    headerLine.BackgroundTransparency = 0.2
+    headerLine.BorderSizePixel = 0
+    headerLine.ZIndex = 2
+    headerLine.Parent = dragFrame
+    
+    local hlGradient = Instance.new("UIGradient")
+    hlGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    hlGradient.Parent = headerLine
 
     -- Container für Alles was nicht Header ist (zum Ein/Ausblenden bei Mini)
     local bodyContainer = Instance.new("Frame")
@@ -285,7 +568,8 @@ function RoseUI:CreateWindow(options)
     bodyContainer.ZIndex = 1
     bodyContainer.Parent = dragFrame
     bodyContainer.ClipsDescendants = true
-
+    
+    -- Hover Glow removed per user request
     -- Minimize / Toggle Logic
     local function ToggleUI()
         screenGui.Enabled = not screenGui.Enabled
@@ -330,10 +614,16 @@ function RoseUI:CreateWindow(options)
         end
     end)
 
-    closeBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+    closeBtn.MouseButton1Click:Connect(function() 
+        pcall(function() blurPart:Destroy() end)
+        pcall(function() dof:Destroy() end)
+        pcall(function() blurConn:Disconnect() end)
+        UserInputService.MouseIcon = "" -- Reset Custom Cursor
+        screenGui:Destroy() 
+    end)
 
     -- ================= RESIZE LOGIC =================
-    local function createResizeGrip(name, size, pos, cursorX, cursorY, iconName)
+    local function createResizeGrip(name, size, pos, dirX, dirY, iconName)
         local grip = Instance.new("TextButton")
         grip.Name = name
         grip.Size = size
@@ -344,14 +634,15 @@ function RoseUI:CreateWindow(options)
         grip.Parent = dragFrame
         
         local isGrabbing = false
-        local startSize, startPos
+        local startSize, startMousePos, startFramePos
 
         grip.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 isGrabbing = true
                 isMaximized = false
                 startSize = dragFrame.Size
-                startPos = input.Position
+                startFramePos = dragFrame.Position
+                startMousePos = input.Position
             end
         end)
         
@@ -359,16 +650,37 @@ function RoseUI:CreateWindow(options)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 isGrabbing = false
                 UserInputService.MouseIconEnabled = true
-                UserInputService.MouseIcon = ""
             end
         end)
         
         local resChg = UserInputService.InputChanged:Connect(function(input)
             if isGrabbing and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local delta = input.Position - startPos
-                local newX = startSize.X.Offset + (cursorX and delta.X or 0)
-                local newY = startSize.Y.Offset + (cursorY and delta.Y or 0)
-                dragFrame.Size = UDim2.new(0, math.clamp(newX, 450, 1200), 0, math.clamp(newY, 300, 1000))
+                local delta = input.Position - startMousePos
+                
+                local currentX = startSize.X.Offset
+                local currentY = startSize.Y.Offset
+                local currentPosX = startFramePos.X.Offset
+                local currentPosY = startFramePos.Y.Offset
+                
+                local newX, newY = currentX, currentY
+                local newPosX, newPosY = currentPosX, currentPosY
+                
+                if dirX == 1 then
+                    newX = math.clamp(currentX + delta.X, 450, 1200)
+                elseif dirX == -1 then
+                    newX = math.clamp(currentX - delta.X, 450, 1200)
+                    newPosX = currentPosX + (currentX - newX)
+                end
+                
+                if dirY == 1 then
+                    newY = math.clamp(currentY + delta.Y, 300, 1000)
+                elseif dirY == -1 then
+                    newY = math.clamp(currentY - delta.Y, 300, 1000)
+                    newPosY = currentPosY + (currentY - newY)
+                end
+                
+                dragFrame.Size = UDim2.new(0, newX, 0, newY)
+                dragFrame.Position = UDim2.new(startFramePos.X.Scale, newPosX, startFramePos.Y.Scale, newPosY)
             end
         end)
         
@@ -376,20 +688,23 @@ function RoseUI:CreateWindow(options)
         table.insert(_G.RoseUI_Connections, resChg)
 
         grip.MouseEnter:Connect(function()
-            if not isGrabbing then
-                UserInputService.MouseIcon = iconName
-            end
+            if not isGrabbing then UserInputService.MouseIcon = iconName end
         end)
         grip.MouseLeave:Connect(function()
-            if not isGrabbing then
-                UserInputService.MouseIcon = ""
-            end
+            if not isGrabbing then UserInputService.MouseIcon = "" end
         end)
     end
 
-    createResizeGrip("RightGrip", UDim2.new(0, 10, 1, -20), UDim2.new(1, -5, 0, 10), true, false, "rbxasset://SystemCursors/SizeWE")
-    createResizeGrip("BottomGrip", UDim2.new(1, -20, 0, 10), UDim2.new(0, 10, 1, -5), false, true, "rbxasset://SystemCursors/SizeNS")
-    createResizeGrip("CornerGrip", UDim2.new(0, 20, 0, 20), UDim2.new(1, -10, 1, -10), true, true, "rbxasset://SystemCursors/SizeNWSE")
+    -- Edges
+    createResizeGrip("RightGrip", UDim2.new(0, 10, 1, -20), UDim2.new(1, -5, 0, 10), 1, 0, "rbxasset://SystemCursors/SizeWE")
+    createResizeGrip("LeftGrip", UDim2.new(0, 10, 1, -20), UDim2.new(0, -5, 0, 10), -1, 0, "rbxasset://SystemCursors/SizeWE")
+    createResizeGrip("BottomGrip", UDim2.new(1, -20, 0, 10), UDim2.new(0, 10, 1, -5), 0, 1, "rbxasset://SystemCursors/SizeNS")
+    createResizeGrip("TopGrip", UDim2.new(1, -20, 0, 10), UDim2.new(0, 10, 0, -5), 0, -1, "rbxasset://SystemCursors/SizeNS")
+    -- Corners
+    createResizeGrip("TopLeftGrip", UDim2.new(0, 20, 0, 20), UDim2.new(0, -10, 0, -10), -1, -1, "rbxasset://SystemCursors/SizeNWSE")
+    createResizeGrip("BottomRightGrip", UDim2.new(0, 20, 0, 20), UDim2.new(1, -10, 1, -10), 1, 1, "rbxasset://SystemCursors/SizeNWSE")
+    createResizeGrip("TopRightGrip", UDim2.new(0, 20, 0, 20), UDim2.new(1, -10, 0, -10), 1, -1, "rbxasset://SystemCursors/SizeNESW")
+    createResizeGrip("BottomLeftGrip", UDim2.new(0, 20, 0, 20), UDim2.new(0, -10, 1, -10), -1, 1, "rbxasset://SystemCursors/SizeNESW")
 
 
     -- ==========================================
@@ -404,16 +719,38 @@ function RoseUI:CreateWindow(options)
     sidebarFrame.ZIndex = 2
     sidebarFrame.Parent = bodyContainer
 
-    local hubTypeText = Instance.new("TextLabel")
-    hubTypeText.Size = UDim2.new(1, 0, 0, 30)
-    hubTypeText.Position = UDim2.new(0, 0, 0, 10)
-    hubTypeText.BackgroundTransparency = 1
-    hubTypeText.Text = hubType
-    hubTypeText.TextColor3 = Color3.fromRGB(200, 150, 170)
-    hubTypeText.TextSize = 12
-    hubTypeText.Font = Enum.Font.GothamSemibold
-    hubTypeText.ZIndex = 3
-    hubTypeText.Parent = sidebarFrame
+    local fpsLabel = Instance.new("TextLabel")
+    fpsLabel.Size = UDim2.new(1, 0, 0, 50)
+    fpsLabel.Position = UDim2.new(0, 0, 0, 5)
+    fpsLabel.BackgroundTransparency = 1
+    fpsLabel.Text = "🌹 FPS: 60"
+    fpsLabel.TextColor3 = HEADER_COLOR
+    fpsLabel.Font = Enum.Font.GothamBold
+    fpsLabel.TextSize = 13
+    fpsLabel.ZIndex = 3
+    fpsLabel.Parent = sidebarFrame
+    
+    local fpsStroke = Instance.new("UIStroke")
+    fpsStroke.Color = Color3.fromRGB(0, 0, 0)
+    fpsStroke.Transparency = 0.5
+    fpsStroke.Thickness = 1
+    fpsStroke.Parent = fpsLabel
+    
+    local sec = tick()
+    local frames = 0
+    local fpsConn = game:GetService("RunService").RenderStepped:Connect(function()
+        frames = frames + 1
+        if tick() - sec >= 1 then
+            if fpsLabel.Parent then
+                fpsLabel.Text = "🌹 FPS: " .. frames
+            else
+                return -- Cleanup will handle disconnect
+            end
+            frames = 0
+            sec = tick()
+        end
+    end)
+    table.insert(_G.RoseUI_Connections, fpsConn)
     
     local separator = Instance.new("Frame")
     separator.Size = UDim2.new(0, 1, 1, -20)
@@ -436,7 +773,7 @@ function RoseUI:CreateWindow(options)
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.Parent = tabContainer
     tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    tabLayout.Padding = UDim.new(0, 6)
+    tabLayout.Padding = UDim.new(0, 12) -- Larger Gap between tabs and lines
 
     -- ==========================================
     -- USER PROFILE AREA (Sidebar Unten Links)
@@ -444,14 +781,15 @@ function RoseUI:CreateWindow(options)
     local profileFrame = Instance.new("Frame")
     profileFrame.Size = UDim2.new(1, -10, 0, 50)
     profileFrame.Position = UDim2.new(0, 5, 1, -55)
-    profileFrame.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+    profileFrame.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
+    profileFrame.BackgroundTransparency = 0.5 -- Fits into the glass look
     profileFrame.ZIndex = 3
     profileFrame.Parent = sidebarFrame
-    Instance.new("UICorner", profileFrame).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", profileFrame).CornerRadius = UDim.new(0, 8)
     
     local pStroke = Instance.new("UIStroke")
     pStroke.Color = HEADER_COLOR
-    pStroke.Transparency = 0.5
+    pStroke.Transparency = 0.7
     pStroke.Thickness = 1
     pStroke.Parent = profileFrame
 
@@ -462,11 +800,18 @@ function RoseUI:CreateWindow(options)
     local avatarImg = Instance.new("ImageLabel")
     avatarImg.Size = UDim2.new(0, 36, 0, 36)
     avatarImg.Position = UDim2.new(0, 7, 0.5, -18)
-    avatarImg.BackgroundColor3 = Color3.fromRGB(20, 10, 15)
+    avatarImg.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
+    avatarImg.BackgroundTransparency = 0.5
     avatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. pId .. "&w=150&h=150"
     avatarImg.ZIndex = 4
     avatarImg.Parent = profileFrame
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
+    
+    local avatarStroke = Instance.new("UIStroke")
+    avatarStroke.Color = HEADER_COLOR
+    avatarStroke.Transparency = 0.5
+    avatarStroke.Thickness = 1
+    avatarStroke.Parent = avatarImg
     
     local nameLbl = Instance.new("TextLabel")
     nameLbl.Size = UDim2.new(1, -55, 0, 15)
@@ -474,7 +819,7 @@ function RoseUI:CreateWindow(options)
     nameLbl.BackgroundTransparency = 1
     nameLbl.Text = pName
     nameLbl.TextColor3 = TEXT_COLOR
-    nameLbl.Font = Enum.Font.GothamBold
+    nameLbl.Font = Enum.Font.GothamMedium
     nameLbl.TextSize = 12
     nameLbl.TextXAlignment = Enum.TextXAlignment.Left
     nameLbl.ZIndex = 4
@@ -500,7 +845,7 @@ function RoseUI:CreateWindow(options)
     contentFrame.Size = UDim2.new(1, -160, 1, 0)
     contentFrame.Position = UDim2.new(0, 160, 0, 0)
     contentFrame.BackgroundColor3 = CONTENT_COLOR
-    contentFrame.BackgroundTransparency = 0.3
+    contentFrame.BackgroundTransparency = 0.15 -- Less transparency 
     contentFrame.BorderSizePixel = 0
     contentFrame.ZIndex = 1
     contentFrame.Parent = bodyContainer
@@ -521,15 +866,19 @@ function RoseUI:CreateWindow(options)
         CurrentTab = nil,
         Tabs = {},
         Elements = {},
-        ConfigFolder = options.ConfigFolder or "RoseHubConfigs",
+        ConfigFolder = "RoseHub/configs",
+        ConfigRefreshListener = function() end,
         ID = currentID,
         TitleLabel = title,
         HubTypeLabel = hubTypeText
     }
     
-    if makefolder and not isfolder(WindowObj.ConfigFolder) then
-        makefolder(WindowObj.ConfigFolder)
-    end
+    RoseUI.CurrentWindow = WindowObj
+    
+    if makefolder and not isfolder("RoseHub") then makefolder("RoseHub") end
+    if makefolder and not isfolder(WindowObj.ConfigFolder) then makefolder(WindowObj.ConfigFolder) end
+
+
     
     function WindowObj:SaveConfig(fileName)
         local data = {}
@@ -580,38 +929,52 @@ function RoseUI:CreateWindow(options)
     function WindowObj:MakeTab(tabOptions)
         local tabName = tabOptions.Name or "Tab"
         local tabIcon = tabOptions.Icon or "rbxassetid://10652380582" -- Default Icon
+        local noSeparator = tabOptions.NoSeparator or false
+        local forceSeparator = tabOptions.ForceSeparator or false
         
         local tabBtn = Instance.new("TextButton")
         tabBtn.Size = UDim2.new(1, 0, 0, 35)
         tabBtn.BackgroundColor3 = HEADER_COLOR
         tabBtn.BackgroundTransparency = 1 
         tabBtn.Text = ""
+        tabBtn.LayoutOrder = tabOptions.LayoutOrder or (#WindowObj.Tabs + 1)
         tabBtn.ZIndex = 4
         tabBtn.Parent = tabContainer
         Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
         
+        if (#WindowObj.Tabs > 0 or forceSeparator) and not noSeparator then
+            local sepLine = Instance.new("Frame")
+            sepLine.Size = UDim2.new(1, -20, 0, 1)
+            sepLine.Position = UDim2.new(0, 10, 0, -6) -- Centered perfectly in the 12px gap
+            sepLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            sepLine.BackgroundTransparency = 0.95
+            sepLine.BorderSizePixel = 0
+            sepLine.ZIndex = 4
+            sepLine.Parent = tabBtn
+        end
+        
         local tabIconImg = Instance.new("ImageLabel")
-        tabIconImg.Size = UDim2.new(0, 18, 0, 18)
-        tabIconImg.Position = UDim2.new(0, 8, 0.5, -9)
+        tabIconImg.Size = UDim2.new(0, 14, 0, 14)
+        tabIconImg.Position = UDim2.new(0, 14, 0.5, -7)
         tabIconImg.BackgroundTransparency = 1
-        tabIconImg.ImageColor3 = Color3.fromRGB(180, 150, 160)
+        tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconImg.ZIndex = 5
         tabIconImg.Parent = tabBtn
 
         local tabIconText = Instance.new("TextLabel")
-        tabIconText.Size = UDim2.new(0, 18, 0, 18)
-        tabIconText.Position = UDim2.new(0, 8, 0.5, -9)
+        tabIconText.Size = UDim2.new(0, 14, 0, 14)
+        tabIconText.Position = UDim2.new(0, 14, 0.5, -7)
         tabIconText.BackgroundTransparency = 1
-        tabIconText.TextColor3 = Color3.fromRGB(180, 150, 160)
+        tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconText.Font = Enum.Font.GothamBold
-        tabIconText.TextSize = 14
+        tabIconText.TextSize = 13
         tabIconText.ZIndex = 5
         tabIconText.Parent = tabBtn
 
         local tabLabel = Instance.new("TextLabel")
         tabLabel.BackgroundTransparency = 1
         tabLabel.Text = tabName
-        tabLabel.TextColor3 = Color3.fromRGB(180, 150, 160)
+        tabLabel.TextColor3 = Color3.fromRGB(200, 200, 200) -- White/Light Gray for unselected tabs
         tabLabel.TextXAlignment = Enum.TextXAlignment.Left
         tabLabel.Font = Enum.Font.GothamSemibold
         tabLabel.TextSize = 13
@@ -628,6 +991,32 @@ function RoseUI:CreateWindow(options)
             tabIconText.Visible = false
             tabLabel.Size = UDim2.new(1, -35, 1, 0)
             tabLabel.Position = UDim2.new(0, 32, 0, 0)
+        elseif string.match(tabIcon, "%.png") or string.match(tabIcon, "http") then
+            tabIconImg.Image = ""
+            tabIconText.Visible = false
+            tabLabel.Size = UDim2.new(1, -35, 1, 0)
+            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+            
+            task.spawn(function()
+                local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
+                if getasset and type(getasset) == "function" then
+                    if not isfolder("RoseHub") then makefolder("RoseHub") end
+                    if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
+                    
+                    local fileName = string.match(tabIcon, "([^/]+%.png)$") or "icon.png"
+                    local path = "RoseHub/assets/white_" .. fileName
+                    
+                    if not isfile(path) then
+                        local url = tabIcon
+                        if not string.match(url, "http") then
+                            url = "https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/" .. tabIcon
+                        end
+                        local s, d = pcall(function() return game:HttpGet(url) end)
+                        if s and d then writefile(path, d) end
+                    end
+                    if isfile(path) then tabIconImg.Image = getasset(path) end
+                end
+            end)
         else
             tabIconImg.Visible = false
             tabIconText.Text = tabIcon
@@ -650,41 +1039,71 @@ function RoseUI:CreateWindow(options)
         pageLayout.Parent = page
         pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
         pageLayout.Padding = UDim.new(0, 8)
+        pageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- Fixes UIStroke cut off on the left
+        
+        -- TAB TITLE INSIDE THE PAGE
+        local topTitle = Instance.new("TextLabel")
+        topTitle.Name = "TabTitle"
+        topTitle.Size = UDim2.new(1, 0, 0, 30)
+        topTitle.BackgroundTransparency = 1
+        topTitle.Text = tabName
+        topTitle.TextColor3 = TEXT_COLOR
+        topTitle.TextXAlignment = Enum.TextXAlignment.Left
+        topTitle.Font = Enum.Font.GothamBold
+        topTitle.TextSize = 20
+        topTitle.Parent = page
+        
+        local titleLine = Instance.new("Frame")
+        titleLine.Name = "TitleDiv"
+        titleLine.Size = UDim2.new(1, -10, 0, 1)
+        titleLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        titleLine.BackgroundTransparency = 0.9
+        titleLine.BorderSizePixel = 0
+        titleLine.Parent = page
         
         pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             page.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 10)
         end)
         
-        -- Fancy Slide in/out Logic (No overlap)
+        -- Fancy Slide in/out Logic (Ultra Smooth)
         local isSwitching = false
         tabBtn.MouseButton1Click:Connect(function()
             if WindowObj.CurrentTab == page or isSwitching then return end
             isSwitching = true
 
-            -- Hide all other tabs immediately to prevent overlap issues
+            local oldPage = WindowObj.CurrentTab
+
+            -- Premium Tab Button Animations (Exponential Smooth)
+            local tabTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
             for _, t in pairs(WindowObj.Tabs) do
-                if t.Page ~= page then
-                    t.Page.Visible = false
-                end
-                tweenService:Create(t.Btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-                tweenService:Create(t.Lbl, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
-                tweenService:Create(t.Img, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(180, 150, 160)}):Play()
-                if t.TxtIcon then
-                    tweenService:Create(t.TxtIcon, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(180, 150, 160)}):Play()
+                if t.Page == page then
+                    tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 0.1}):Play()
+                    tweenService:Create(t.Lbl, tabTweenInfo, {TextColor3 = TEXT_COLOR}):Play()
+                    tweenService:Create(t.Img, tabTweenInfo, {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                    if t.TxtIcon then tweenService:Create(t.TxtIcon, tabTweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play() end
+                else
+                    tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 1}):Play()
+                    tweenService:Create(t.Lbl, tabTweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 140)}):Play()
+                    tweenService:Create(t.Img, tabTweenInfo, {ImageColor3 = Color3.fromRGB(140, 140, 140)}):Play()
+                    if t.TxtIcon then tweenService:Create(t.TxtIcon, tabTweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 140)}):Play() end
                 end
             end
 
-            -- Neue Page Slide in
-            page.Visible = true
-            page.Position = UDim2.new(0, 10, 0, 50) -- Startet leicht unten
-            tweenService:Create(page, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, 10, 0, 10)}):Play()
+            -- Slide old page out smoothly
+            if oldPage then
+                tweenService:Create(oldPage, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = UDim2.new(0, 10, 0, 40)}):Play()
+            end
             
-            tweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play()
-            tweenService:Create(tabLabel, TweenInfo.new(0.2), {TextColor3 = TEXT_COLOR}):Play()
-            tweenService:Create(tabIconImg, TweenInfo.new(0.2), {ImageColor3 = TEXT_COLOR}):Play()
-            tweenService:Create(tabIconText, TweenInfo.new(0.2), {TextColor3 = TEXT_COLOR}):Play()
+            task.wait(0.15) -- Tiny delay for a staggered overlap effect
             
+            if oldPage then oldPage.Visible = false end
+
+            -- Slide new page in with an ultra clean snap
             WindowObj.CurrentTab = page
+            page.Visible = true
+            page.Position = UDim2.new(0, 10, 0, 50) -- Start lower
+            tweenService:Create(page, TweenInfo.new(0.65, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.new(0, 10, 0, 10)}):Play()
+            
             task.wait(0.2)
             isSwitching = false
         end)
@@ -692,10 +1111,11 @@ function RoseUI:CreateWindow(options)
         -- Setze ersten Tab aktiv
         if #WindowObj.Tabs == 0 then
             page.Visible = true
+            page.Position = UDim2.new(0, 10, 0, 10)
             tabBtn.BackgroundTransparency = 0.1
             tabLabel.TextColor3 = TEXT_COLOR
-            tabIconImg.ImageColor3 = TEXT_COLOR
-            tabIconText.TextColor3 = TEXT_COLOR
+            tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
+            tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255)
             WindowObj.CurrentTab = page
         end
         
@@ -720,8 +1140,8 @@ function RoseUI:CreateWindow(options)
             sectionStroke.Parent = sectionFrame
 
             local sectionLabel = Instance.new("TextLabel")
-            sectionLabel.Size = UDim2.new(1, -20, 0, 30)
-            sectionLabel.Position = UDim2.new(0, 10, 0, 0)
+            sectionLabel.Size = UDim2.new(1, -30, 0, 30)
+            sectionLabel.Position = UDim2.new(0, 15, 0, 0)
             sectionLabel.BackgroundTransparency = 1
             sectionLabel.Text = sName
             sectionLabel.TextColor3 = HEADER_COLOR
@@ -791,19 +1211,44 @@ function RoseUI:CreateWindow(options)
         -- 1. BUTTON
         function TabObj:AddButton(btnOptions)
             local bName = btnOptions.Name or "Button"
+            local bDesc = btnOptions.Description or nil
             local cb = btnOptions.Callback or function() end
+            local h = bDesc and 56 or 38
             
             local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, -10, 0, 38)
+            btn.Size = UDim2.new(1, -10, 0, h)
             btn.BackgroundColor3 = CARD_COLOR
-            btn.Text = "  " .. bName
-            btn.TextColor3 = TEXT_COLOR
-            btn.Font = Enum.Font.GothamBold
-            btn.TextSize = 13
-            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Text = ""
             btn.ZIndex = 11
             btn.Parent = page
             Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+            local titleLbl = Instance.new("TextLabel")
+            titleLbl.Size = UDim2.new(1, -40, 0, bDesc and 28 or h)
+            titleLbl.Position = UDim2.new(0, 15, 0, bDesc and 4 or 0)
+            titleLbl.BackgroundTransparency = 1
+            titleLbl.Text = bName
+            titleLbl.TextColor3 = TEXT_COLOR
+            titleLbl.Font = Enum.Font.GothamBold
+            titleLbl.TextSize = 13
+            titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+            titleLbl.ZIndex = 12
+            titleLbl.Parent = btn
+
+            if bDesc then
+                local descLbl = Instance.new("TextLabel")
+                descLbl.Size = UDim2.new(1, -40, 0, 20)
+                descLbl.Position = UDim2.new(0, 15, 0, 28)
+                descLbl.BackgroundTransparency = 1
+                descLbl.Text = bDesc
+                descLbl.TextColor3 = Color3.fromRGB(160, 140, 150)
+                descLbl.Font = Enum.Font.Gotham
+                descLbl.TextSize = 11
+                descLbl.TextXAlignment = Enum.TextXAlignment.Left
+                descLbl.TextWrapped = true
+                descLbl.ZIndex = 12
+                descLbl.Parent = btn
+            end
 
             -- Click Icon for aesthetic
             local clickIcon = Instance.new("TextLabel")
@@ -825,28 +1270,30 @@ function RoseUI:CreateWindow(options)
                 tweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = CARD_COLOR}):Play() 
                 tweenService:Create(clickIcon, TweenInfo.new(0.2), {Position = UDim2.new(1, -30, 0.5, -10), TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
             end)
-            btn.MouseButton1Down:Connect(function() tweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(0.98, -10, 0, 35)}):Play() end)
-            btn.MouseButton1Up:Connect(function() tweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(1, -10, 0, 38)}):Play() end)
+            btn.MouseButton1Down:Connect(function() tweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(0.98, -10, 0, h - 3)}):Play() end)
+            btn.MouseButton1Up:Connect(function() tweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(1, -10, 0, h)}):Play() end)
             btn.MouseButton1Click:Connect(cb)
         end
 
         -- 2. TOGGLE
         function TabObj:AddToggle(toggleOptions)
             local tName = toggleOptions.Name or "Toggle"
+            local tDesc = toggleOptions.Description or nil
             local cb = toggleOptions.Callback or function() end
             local defaultParams = toggleOptions.Default or false
             local isToggled = defaultParams
+            local h = tDesc and 56 or 42
             
             local toggleFrame = Instance.new("Frame")
-            toggleFrame.Size = UDim2.new(1, -10, 0, 42)
+            toggleFrame.Size = UDim2.new(1, -10, 0, h)
             toggleFrame.BackgroundColor3 = CARD_COLOR
             toggleFrame.ZIndex = 11
             toggleFrame.Parent = page
             Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 6)
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -60, 1, 0)
-            label.Position = UDim2.new(0, 15, 0, 0)
+            label.Size = UDim2.new(1, -60, 0, tDesc and 28 or h)
+            label.Position = UDim2.new(0, 15, 0, tDesc and 4 or 0)
             label.BackgroundTransparency = 1
             label.Text = tName
             label.TextColor3 = TEXT_COLOR
@@ -855,6 +1302,21 @@ function RoseUI:CreateWindow(options)
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.ZIndex = 12
             label.Parent = toggleFrame
+
+            if tDesc then
+                local descLbl = Instance.new("TextLabel")
+                descLbl.Size = UDim2.new(1, -60, 0, 20)
+                descLbl.Position = UDim2.new(0, 15, 0, 28)
+                descLbl.BackgroundTransparency = 1
+                descLbl.Text = tDesc
+                descLbl.TextColor3 = Color3.fromRGB(160, 140, 150)
+                descLbl.Font = Enum.Font.Gotham
+                descLbl.TextSize = 11
+                descLbl.TextXAlignment = Enum.TextXAlignment.Left
+                descLbl.TextWrapped = true
+                descLbl.ZIndex = 12
+                descLbl.Parent = toggleFrame
+            end
 
             local toggleBtn = Instance.new("TextButton")
             toggleBtn.Size = UDim2.new(0, 44, 0, 22)
@@ -1052,21 +1514,23 @@ function RoseUI:CreateWindow(options)
         -- 3. SLIDER
         function TabObj:AddSlider(sliderOptions)
             local sName = sliderOptions.Name or "Slider"
+            local sDesc = sliderOptions.Description or nil
             local min = sliderOptions.Min or 0
             local max = sliderOptions.Max or 100
             local default = sliderOptions.Default or 50
             local cb = sliderOptions.Callback or function() end
+            local h = sDesc and 74 or 50
             
             local sliderFrame = Instance.new("Frame")
-            sliderFrame.Size = UDim2.new(1, -10, 0, 50)
+            sliderFrame.Size = UDim2.new(1, -10, 0, h)
             sliderFrame.BackgroundColor3 = CARD_COLOR
             sliderFrame.ZIndex = 11
             sliderFrame.Parent = page
             Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 6)
             
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, -60, 0, 25)
-            label.Position = UDim2.new(0, 15, 0, 0)
+            label.Size = UDim2.new(1, -60, 0, sDesc and 30 or 25)
+            label.Position = UDim2.new(0, 15, 0, sDesc and -2 or 0)
             label.BackgroundTransparency = 1
             label.Text = sName
             label.TextColor3 = TEXT_COLOR
@@ -1076,9 +1540,24 @@ function RoseUI:CreateWindow(options)
             label.ZIndex = 12
             label.Parent = sliderFrame
 
+            if sDesc then
+                local descLbl = Instance.new("TextLabel")
+                descLbl.Size = UDim2.new(1, -60, 0, 20)
+                descLbl.Position = UDim2.new(0, 15, 0, 24)
+                descLbl.BackgroundTransparency = 1
+                descLbl.Text = sDesc
+                descLbl.TextColor3 = Color3.fromRGB(160, 140, 150)
+                descLbl.Font = Enum.Font.Gotham
+                descLbl.TextSize = 11
+                descLbl.TextXAlignment = Enum.TextXAlignment.Left
+                descLbl.TextWrapped = true
+                descLbl.ZIndex = 12
+                descLbl.Parent = sliderFrame
+            end
+
             local highlightBox = Instance.new("Frame")
             highlightBox.Size = UDim2.new(0, 45, 0, 20)
-            highlightBox.Position = UDim2.new(1, -55, 0, 5)
+            highlightBox.Position = UDim2.new(1, -55, 0, sDesc and 12 or 5)
             highlightBox.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
             highlightBox.ZIndex = 12
             highlightBox.Parent = sliderFrame
@@ -1096,7 +1575,7 @@ function RoseUI:CreateWindow(options)
 
             local slideBg = Instance.new("Frame")
             slideBg.Size = UDim2.new(1, -30, 0, 6)
-            slideBg.Position = UDim2.new(0, 15, 0, 32)
+            slideBg.Position = UDim2.new(0, 15, 0, sDesc and 54 or 32)
             slideBg.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
             slideBg.ZIndex = 12
             slideBg.Parent = sliderFrame
@@ -1430,7 +1909,7 @@ function RoseUI:CreateWindow(options)
             dropMenuBg.ZIndex = currentZ + 50
             dropMenuBg.ClipsDescendants = true -- Verhindert dass buttons rausgucken
             dropMenuBg.Visible = false
-            dropMenuBg.Parent = pageContainer
+            dropMenuBg.Parent = screenGui -- Fix: Render above the clipped window boundaries
             Instance.new("UICorner", dropMenuBg).CornerRadius = UDim.new(0, 4)
             
             local dropMenuStroke = Instance.new("UIStroke")
@@ -1474,9 +1953,9 @@ function RoseUI:CreateWindow(options)
                 if isOpen then
                     dropMenuBg.Visible = true
                     
-                    -- Calculate absolute position and size
+                    -- Calculate absolute position and size relative to screen
                     dropMenuBg.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)
-                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X - pageContainer.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y - pageContainer.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
+                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
                     
                     tweenService:Create(arrow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 180, TextColor3 = TEXT_COLOR}):Play()
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0}):Play()
@@ -1491,13 +1970,12 @@ function RoseUI:CreateWindow(options)
                 end
             end
             
-            -- Close dropdown if scrolling
+            -- Close dropdown when scrolling or window moves
+            local function closeIfOpen() if isOpen then toggleDropdown() end end
             local scrollFrame = dropFrame:FindFirstAncestorWhichIsA("ScrollingFrame")
-            if scrollFrame then
-                scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-                    if isOpen then toggleDropdown() end
-                end)
-            end
+            if scrollFrame then scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(closeIfOpen) end
+            bodyContainer:GetPropertyChangedSignal("Position"):Connect(closeIfOpen)
+            bodyContainer:GetPropertyChangedSignal("AbsoluteSize"):Connect(closeIfOpen)
 
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
@@ -2011,7 +2489,7 @@ function RoseUI:CreateWindow(options)
             dropMenuBg.ZIndex = currentZ + 50
             dropMenuBg.ClipsDescendants = true
             dropMenuBg.Visible = false
-            dropMenuBg.Parent = page
+            dropMenuBg.Parent = screenGui
             Instance.new("UICorner", dropMenuBg).CornerRadius = UDim.new(0, 4)
             
             local dropMenuStroke = Instance.new("UIStroke")
@@ -2112,7 +2590,7 @@ function RoseUI:CreateWindow(options)
                 isOpen = not isOpen
                 if isOpen then
                     dropMenuBg.Visible = true
-                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X - page.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y - page.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
+                    dropMenuBg.Position = UDim2.new(0, dropBtn.AbsolutePosition.X, 0, dropBtn.AbsolutePosition.Y + dropBtn.AbsoluteSize.Y + 2)
                     arrow.Text = "▲"
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0.2}):Play()
                     
@@ -2128,12 +2606,11 @@ function RoseUI:CreateWindow(options)
                 end
             end
             
+            local function closeIfOpen() if isOpen then toggleDropdown() end end
             local scrollFrame = dropFrame:FindFirstAncestorWhichIsA("ScrollingFrame")
-            if scrollFrame then
-                scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-                    if isOpen then toggleDropdown() end
-                end)
-            end
+            if scrollFrame then scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(closeIfOpen) end
+            bodyContainer:GetPropertyChangedSignal("Position"):Connect(closeIfOpen)
+            bodyContainer:GetPropertyChangedSignal("AbsoluteSize"):Connect(closeIfOpen)
 
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
@@ -2970,6 +3447,7 @@ function RoseUI:CreateWindow(options)
                 conn = UserInputService.InputBegan:Connect(function(input, processed)
                     if not processed and input.UserInputType == Enum.UserInputType.Keyboard then
                         currentKey = input.KeyCode
+                        KeybindAPI.Value = currentKey -- Fix: Ensure Config Manager gets the new key
                         bindBtn.Text = currentKey.Name
                         isWaiting = false
                         tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = 0.8}):Play()
@@ -3065,6 +3543,22 @@ function RoseUI:CreateWindow(options)
         })
         
         cfgSection:AddButton({
+            Name = "Set as Autoload",
+            Callback = function()
+                if selectedConfig == "" or selectedConfig == "No Configs Found" then
+                    RoseUI:Notify({Title = "⚠️ Error", Text = "Please select a valid config first.", Duration = 3})
+                    return 
+                end
+                pcall(function()
+                    if writefile then
+                        writefile("RoseHub/autoload.txt", selectedConfig)
+                        RoseUI:Notify({Title = "🌹 Config Autoload", Text = selectedConfig .. " set to auto-load.", Duration = 4})
+                    end
+                end)
+            end
+        })
+        
+        cfgSection:AddButton({
             Name = "Refresh List",
             Callback = function()
                 refreshConfigList()
@@ -3072,6 +3566,236 @@ function RoseUI:CreateWindow(options)
         })
     end
     
+    -- ========================================================
+    -- DEFAULT TABS (Settings, Debug, Config)
+    -- ========================================================
+    local SettingsTab = WindowObj:MakeTab({
+        Name = "Settings",
+        Icon = "settings.png",
+        PremiumOnly = false,
+        ForceSeparator = true,
+        LayoutOrder = 9997
+    })
+    local settingsSec = SettingsTab:AddSection("Window Settings ⚙️")
+    SettingsTab:AddKeybind({
+        Name = "Toggle Hub UI",
+        Default = Enum.KeyCode.RightAlt,
+        Hold = false,
+        Callback = function() end -- Just visual, bound globally already
+    })
+    
+    SettingsTab:AddDropdown({
+        Name = "UI Theme",
+        Options = {"Dark Rose", "Ocean Blue", "Forest Green"},
+        Default = currentThemeName,
+        Callback = function(themeName)
+            if WindowObj.SetTheme then WindowObj:SetTheme(themeName) end
+        end
+    })
+    
+    SettingsTab:AddToggle({
+        Name = "🚀 Max FPS Mode (Strip Textures)",
+        Default = false,
+        Callback = function(state)
+            if not state then 
+                RoseUI:Notify({Title = "⚠️ Info", Text = "You must rejoin the game to restore textures.", Duration = 4})
+                return 
+            end
+            
+            pcall(function()
+                local lighting = game:GetService("Lighting")
+                lighting.GlobalShadows = false
+                lighting.FogEnd = 9e9
+                for _, v in pairs(lighting:GetDescendants()) do
+                    if v:IsA("PostEffect") or v:IsA("BlurEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") then
+                        v.Enabled = false
+                    end
+                end
+                
+                settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+                
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("Texture") or v:IsA("Decal") then
+                        v.Transparency = 1
+                    elseif v:IsA("ParticleEmitter") or v:IsA("Beam") or v:IsA("Trail") then
+                        v.Enabled = false
+                    elseif v:IsA("BasePart") then
+                        v.Material = Enum.Material.SmoothPlastic
+                    end
+                end
+                
+                -- Catch new parts firing in
+                workspace.DescendantAdded:Connect(function(v)
+                    pcall(function()
+                        if v:IsA("Texture") or v:IsA("Decal") then
+                            v.Transparency = 1
+                        elseif v:IsA("ParticleEmitter") or v:IsA("Beam") or v:IsA("Trail") then
+                            v.Enabled = false
+                        elseif v:IsA("BasePart") then
+                            v.Material = Enum.Material.SmoothPlastic
+                        end
+                    end)
+                end)
+                
+                RoseUI:Notify({Title = "🚀 Max FPS Activated", Text = "Graphics heavily stripped.", Duration = 4})
+            end)
+        end
+    })
+    
+    function WindowObj:SetTheme(themeName)
+        local newTheme = RoseUI_Themes[themeName]
+        if not newTheme then return end
+        
+        local oldHeader = HEADER_COLOR
+        local oldSidebar = SIDEBAR_COLOR
+        local oldContent = CONTENT_COLOR
+        local oldCard = CARD_COLOR
+        local oldText = TEXT_COLOR
+        
+        local targetColors = {
+            [oldHeader:ToHex()] = newTheme.Header,
+            [oldSidebar:ToHex()] = newTheme.Sidebar,
+            [oldContent:ToHex()] = newTheme.Content,
+            [oldCard:ToHex()] = newTheme.Card,
+            [oldText:ToHex()] = newTheme.Text
+        }
+        
+        -- Update local state for NEW elements
+        HEADER_COLOR = newTheme.Header
+        SIDEBAR_COLOR = newTheme.Sidebar
+        CONTENT_COLOR = newTheme.Content
+        CARD_COLOR = newTheme.Card
+        TEXT_COLOR = newTheme.Text
+        
+        -- Flashy Live Tween Update
+        local tInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+        
+        local function scanAndTween(parentObj)
+            for _, obj in pairs(parentObj:GetDescendants()) do
+                local tweens = {}
+                if obj:IsA("GuiObject") or obj:IsA("UIStroke") then
+                    pcall(function()
+                        if obj.BackgroundColor3 and targetColors[obj.BackgroundColor3:ToHex()] then tweens.BackgroundColor3 = targetColors[obj.BackgroundColor3:ToHex()] end
+                    end)
+                    pcall(function()
+                        if (obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox")) and obj.TextColor3 and targetColors[obj.TextColor3:ToHex()] then
+                            tweens.TextColor3 = targetColors[obj.TextColor3:ToHex()]
+                        end
+                    end)
+                    pcall(function()
+                        if (obj:IsA("ImageLabel") or obj:IsA("ImageButton")) and obj.ImageColor3 and targetColors[obj.ImageColor3:ToHex()] then
+                            tweens.ImageColor3 = targetColors[obj.ImageColor3:ToHex()]
+                        end
+                    end)
+                    pcall(function()
+                        if obj:IsA("ScrollingFrame") and obj.ScrollBarImageColor3 and targetColors[obj.ScrollBarImageColor3:ToHex()] then
+                            tweens.ScrollBarImageColor3 = targetColors[obj.ScrollBarImageColor3:ToHex()]
+                        end
+                    end)
+                    pcall(function()
+                        if obj:IsA("UIStroke") and obj.Color and targetColors[obj.Color:ToHex()] then
+                            tweens.Color = targetColors[obj.Color:ToHex()]
+                        end
+                    end)
+                end
+                if next(tweens) then
+                    tweenService:Create(obj, tInfo, tweens):Play()
+                end
+            end
+        end
+        
+        scanAndTween(screenGui)
+        scanAndTween(openBtnGui)
+        
+        -- Save
+        pcall(function()
+            if writefile then
+                if not isfolder("RoseHub") then makefolder("RoseHub") end
+                writefile("RoseHub/theme.txt", themeName)
+            end
+        end)
+    end
+    SettingsTab:AddButton({
+        Name = "Unload UI",
+        Callback = function()
+            if screenGui then
+                pcall(function() blurPart:Destroy() end)
+                pcall(function() dof:Destroy() end)
+                if blurConn then blurConn:Disconnect() end
+                screenGui:Destroy()
+            end
+        end
+    })
+
+    local DebugTab = WindowObj:MakeTab({
+        Name = "Debug",
+        Icon = "settings-sliders.png",
+        PremiumOnly = false,
+        NoSeparator = true,
+        LayoutOrder = 9998
+    })
+    
+    local toolsSec = DebugTab:AddSection("Tools")
+    
+    DebugTab:AddButton({
+        Name = "Remote Spy",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/SimpleSpyV3/main.lua"))()
+        end
+    })
+    
+    DebugTab:AddButton({
+        Name = "Dex",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/MITUMAxDev/Tools/refs/heads/main/Dex-Explorer.lua"))({"https://discord.gg/PsF7tsxKSS"})
+        end
+    })
+    
+    DebugTab:AddButton({
+        Name = "Infinite Yield",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        end
+    })
+    
+    local utilsSec = DebugTab:AddSection("Utilities")
+    
+    DebugTab:AddButton({
+        Name = "Server Hop",
+        Callback = function()
+            RoseUI:Notify({Title = "Hop", Text = "Finding a new server...", Duration = 3})
+            local HttpService, TPService = game:GetService("HttpService"), game:GetService("TeleportService")
+            local sfUrl = "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=%s&limit=100"
+            local req = request({Url = string.format(sfUrl, game.PlaceId, "Desc")})
+            local body = HttpService:JSONDecode(req.Body)
+            if body and body.data then
+                for i, v in next, body.data do
+                    if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= game.JobId then
+                        TPService:TeleportToPlaceInstance(game.PlaceId, v.id, game.Players.LocalPlayer)
+                        break
+                    end
+                end
+            end
+        end
+    })
+    
+    DebugTab:AddButton({
+        Name = "Rejoin Server",
+        Callback = function()
+            RoseUI:Notify({Title = "Rejoin", Text = "Rejoining current server...", Duration = 3})
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+        end
+    })
+
+    local ConfigTab = WindowObj:MakeTab({
+        Name = "Config",
+        Icon = "disk.png",
+        PremiumOnly = false,
+        NoSeparator = true,
+        LayoutOrder = 9999
+    })
+    WindowObj:CreateConfigManager(ConfigTab)
+
     -- ================= INTRO ANIMATION =================
     dragFrame.Size = UDim2.new(0, 0, 0, 0)
     dragFrame.ClipsDescendants = true
@@ -3166,5 +3890,142 @@ function RoseUI:CreateWindow(options)
 
     return WindowObj
 end
+
+-- ========================================================
+-- ROSE UI FRAMEWORK V3 - COMPLETE DOCUMENTATION
+-- ========================================================
+--[[
+    Welcome to the Rose UI Framework V3!
+    This is a modern, responsive, and animated UI library for Roblox exploit scripts.
+
+    # 1. Bootstrapping the Window
+    local Window = RoseUI:CreateWindow({
+        Name = "Rose Hub | Your Title",
+        HidePremium = false,
+        SaveConfig = true,
+        ConfigFolder = "RoseHubConfigs"
+    })
+
+    # 2. Creating Tabs & Sections
+    local MainTab = Window:MakeTab({
+        Name = "Main",
+        Icon = "home.png", -- Can be an asset ID or raw link from github
+        PremiumOnly = false
+    })
+    
+    local Section = MainTab:AddSection("Player Features")
+
+    # 3. Basic Elements
+    MainTab:AddLabel("Informational text goes here.")
+
+    MainTab:AddButton({
+        Name = "Kill All",
+        Description = "Instantly wipe the server", -- Optional sub-text
+        Callback = function()
+            print("Action hit!")
+        end
+    })
+
+    MainTab:AddToggle({
+        Name = "Auto-Aim",
+        Description = "Locks onto nearest players automatically", -- Optional sub-text
+        Default = false,
+        Callback = function(Value)
+            print("Toggle Set To:", Value)
+        end
+    })
+
+    # 4. Interactive Adjustments
+    MainTab:AddSlider({
+        Name = "WalkSpeed",
+        Description = "Adjusts movement speed", -- Optional sub-text
+        Min = 16,
+        Max = 200,
+        Default = 16,
+        Color = Color3.fromRGB(240, 80, 100), -- Accent color (Optional)
+        Increment = 1,
+        ValueName = "WS",
+        Callback = function(Value)
+            print("Speed:", Value)
+        end
+    })
+
+    # 5. Dropdowns & Pickers
+    MainTab:AddDropdown({
+        Name = "Target Player",
+        Default = "LocalPlayer",
+        Options = {"LocalPlayer", "Player1", "Player2"},
+        Callback = function(Value)
+            print("Selected:", Value)
+        end
+    })
+
+    MainTab:AddSearchDropdown({
+        Name = "Select Item",
+        Default = "Sword",
+        Options = {"Sword", "Shield", "Potion", "Bow", "Apple", "Wood"},
+        Callback = function(Value)
+            print("Searched & Selected:", Value)
+        end
+    })
+
+    MainTab:AddColorPicker({
+        Name = "ESP Color",
+        Default = Color3.fromRGB(255, 0, 0),
+        Callback = function(Value)
+            print("Color:", Value)
+        end
+    })
+
+    # 6. Inputs & Binds
+    MainTab:AddTextbox({
+        Name = "Webhook URL",
+        Placeholder = "https://discord.com/api/webhooks/...",
+        Callback = function(Text)
+            print("Input:", Text)
+        end
+    })
+
+    MainTab:AddKeybind({
+        Name = "Toggle Menu",
+        Default = Enum.KeyCode.RightShift,
+        Hold = false,
+        Callback = function()
+            print("Key Pressed!")
+        end
+    })
+
+    # 7. Advanced Hybrid Elements
+    MainTab:AddToggleSlider({
+        Name = "Hitbox Expander",
+        Min = 0,
+        Max = 50,
+        DefaultSlider = 10,
+        DefaultToggle = false,
+        Suffix = "studs",
+        OnToggle = function(Toggled)
+            print("Hitbox Active:", Toggled)
+        end,
+        OnSlider = function(Value)
+            print("Hitbox Size:", Value)
+        end
+    })
+
+    # 8. Data Layouts
+    -- AddInventoryGrid is designed for slot-based items
+    MainTab:AddInventoryGrid({
+        Items = {
+            {Name = "Sword", Quantity = 1},
+            {Name = "Wood", Quantity = 64}
+        },
+        OnItemClick = function(item)
+            print("Clicked", item.Name)
+        end
+    })
+
+    # 9. Initialization
+    -- MUST CALL THIS at the end of your script to process auto-loads and configs.
+    RoseUI:Init()
+]]
 
 return RoseUI
