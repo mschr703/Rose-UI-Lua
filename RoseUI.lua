@@ -385,8 +385,8 @@ function RoseUI:CreateWindow(options)
     headerFrame.Parent = dragFrame
     
     local headerLogo = Instance.new("ImageLabel")
-    headerLogo.Size = UDim2.new(0, 40, 0, 40)
-    headerLogo.Position = UDim2.new(0, 8, 0.5, -20)
+    headerLogo.Size = UDim2.new(0, 24, 0, 24)
+    headerLogo.Position = UDim2.new(0, 10, 0.5, -12)
     headerLogo.BackgroundTransparency = 1
     headerLogo.Image = "rbxassetid://135043831839832" -- Fallback
     headerLogo.ScaleType = Enum.ScaleType.Fit
