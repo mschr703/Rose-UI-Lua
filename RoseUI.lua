@@ -208,7 +208,7 @@ end
 
 
 function RoseUI:CreateWindow(options)
-    local titleText = options.Name or "Rose Hub 🌹"
+    local titleText = options.Name or "Rose Hub"
     local hubType = options.HubType or "Rose Hub"
 
     -- Global overlapping prevention to kill old background loops
@@ -253,27 +253,50 @@ function RoseUI:CreateWindow(options)
     openBtnGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     openBtnGui.Parent = targetContainer
 
-    local mobileOpenBtn = Instance.new("TextButton")
-    mobileOpenBtn.Size = UDim2.new(0, 50, 0, 50)
-    mobileOpenBtn.Position = UDim2.new(0.5, -25, 0, 10)
+    local mobileOpenBtn = Instance.new("ImageButton")
+    mobileOpenBtn.Size = UDim2.new(0, 45, 0, 45)
+    mobileOpenBtn.Position = UDim2.new(1, -60, 0, 15) -- Upper right corner
     mobileOpenBtn.BackgroundColor3 = CARD_COLOR
-    mobileOpenBtn.Text = "🌹"
-    mobileOpenBtn.TextSize = 24
+    mobileOpenBtn.Image = "rbxassetid://135043831839832"
     mobileOpenBtn.ZIndex = 100
     mobileOpenBtn.Parent = openBtnGui
     Instance.new("UICorner", mobileOpenBtn).CornerRadius = UDim.new(1, 0)
+    
+    task.spawn(function()
+        local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
+        if getasset and type(getasset) == "function" then
+            local path = "RoseHub/assets/rose_logo_v3_small.png"
+            if isfile and isfile(path) then mobileOpenBtn.Image = getasset(path) end
+        end
+    end)
 
     local mbStroke = Instance.new("UIStroke")
     mbStroke.Color = HEADER_COLOR
     mbStroke.Thickness = 2
     mbStroke.Parent = mobileOpenBtn
     
-    -- Main Container
+    -- Main Container Dynamic Scaling
+    local camera = workspace.CurrentCamera
+    local viewportSize = camera.ViewportSize
+    
+    local defaultWidth = 650
+    local defaultHeight = 520
+    
+    local padding = 40 -- Minimum space from edges on mobile
+    
+    local finalWidth = math.min(defaultWidth, viewportSize.X - padding)
+    local finalHeight = math.min(defaultHeight, viewportSize.Y - padding)
+    
+    local UIMinWidth = 300
+    local UIMinHeight = 350
+    finalWidth = math.max(finalWidth, UIMinWidth)
+    finalHeight = math.max(finalHeight, UIMinHeight)
+
     local dragFrame = Instance.new("Frame")
     dragFrame.Name = "DragBox"
-    dragFrame.Size = UDim2.new(0, 650, 0, 520)
-    local DEFAULT_SIZE = UDim2.new(0, 650, 0, 520)
-    dragFrame.Position = UDim2.new(0.5, -325, 0.5, -260)
+    dragFrame.Size = UDim2.new(0, finalWidth, 0, finalHeight)
+    local DEFAULT_SIZE = dragFrame.Size
+    dragFrame.Position = UDim2.new(0.5, -finalWidth/2, 0.5, -finalHeight/2)
     dragFrame.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
     dragFrame.BackgroundTransparency = 0.15 -- Less transparent, darker background
     dragFrame.Active = true
@@ -539,7 +562,7 @@ function RoseUI:CreateWindow(options)
     local isMinimized = false
     local isMaximized = false
     local preMaxSize = DEFAULT_SIZE
-    local preMaxPos = UDim2.new(0.5, -325, 0.5, -260)
+    local preMaxPos = UDim2.new(0.5, -finalWidth/2, 0.5, -finalHeight/2)
 
     -- Header Separator Line
     local headerLine = Instance.new("Frame")
@@ -576,7 +599,7 @@ function RoseUI:CreateWindow(options)
         screenGui.Enabled = not screenGui.Enabled
         openBtnGui.Enabled = not screenGui.Enabled
         if not screenGui.Enabled then
-            RoseUI:Notify({Title = "🌹 Hub Minimized", Text = "Tap the 🌹 icon at the top or press Right Alt to reopen.", Duration = 4})
+            RoseUI:Notify({Title = "Rose Hub Minimized", Text = "Tap the logo at the top right or press Right Alt to reopen.", Duration = 4})
         end
     end
     
