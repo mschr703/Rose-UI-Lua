@@ -1303,7 +1303,7 @@ function RoseUI:CreateWindow(options)
         function TabObj:AddToggle(toggleOptions)
             local tName = toggleOptions.Name or "Toggle"
             local tDesc = toggleOptions.Description or nil
-            local cb = toggleOptions.Callback or function() end
+            local cb = toggleOptions.Callback or toggleOptions.OnToggle or function() end
             local defaultParams = toggleOptions.Default or false
             local isToggled = defaultParams
             local h = tDesc and 56 or 42
@@ -1686,8 +1686,8 @@ function RoseUI:CreateWindow(options)
             local defSlider = tsOptions.DefaultSlider or math.floor((min + max) / 2)
             local defToggle = tsOptions.DefaultToggle or false
             local suffix = tsOptions.Suffix or ""
-            local cbToggle = tsOptions.OnToggle or function() end
-            local cbSlider = tsOptions.OnSlider or function() end
+            local cbToggle = tsOptions.CallbackToggle or tsOptions.OnToggle or function() end
+            local cbSlider = tsOptions.CallbackSlider or tsOptions.OnSlider or function() end
             
             local tsFrame = Instance.new("Frame")
             tsFrame.Size = UDim2.new(1, -10, 0, 70)
