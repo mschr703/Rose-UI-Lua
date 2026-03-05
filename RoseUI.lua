@@ -1305,12 +1305,21 @@ function RoseUI:CreateWindow(options)
             local tDesc = toggleOptions.Description or nil
             local cb = toggleOptions.Callback or toggleOptions.OnToggle or function() end
             local defaultParams = toggleOptions.Default or false
+            local isNested = toggleOptions.Nested or false
             local isToggled = defaultParams
             local h = tDesc and 56 or 42
             
             local toggleFrame = Instance.new("Frame")
-            toggleFrame.Size = UDim2.new(1, -10, 0, h)
+            
+            if isNested then
+                toggleFrame.Size = UDim2.new(1, -25, 0, h)
+                toggleFrame.Position = UDim2.new(0, 15, 0, 0)
+            else
+                toggleFrame.Size = UDim2.new(1, -10, 0, h)
+            end
+            
             toggleFrame.BackgroundColor3 = CARD_COLOR
+            toggleFrame.ClipsDescendants = true
             toggleFrame.ZIndex = 11
             toggleFrame.Parent = page
             Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 6)
@@ -1371,6 +1380,24 @@ function RoseUI:CreateWindow(options)
                 Type = "Toggle",
                 Value = defaultParams
             }
+            local currentTween
+            
+            function ToggleAPI:Hide()
+                if currentTween then currentTween:Cancel() end
+                currentTween = tweenService:Create(toggleFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(isNested and 1 or 1, isNested and -25 or -10, 0, 0)})
+                currentTween:Play()
+                task.spawn(function()
+                    currentTween.Completed:Wait()
+                    if toggleFrame.Size.Y.Offset == 0 then toggleFrame.Visible = false end
+                end)
+            end
+            
+            function ToggleAPI:Show()
+                toggleFrame.Visible = true
+                if currentTween then currentTween:Cancel() end
+                currentTween = tweenService:Create(toggleFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(isNested and 1 or 1, isNested and -25 or -10, 0, h)})
+                currentTween:Play()
+            end
             
             function ToggleAPI:Set(state)
                 if ToggleAPI.Value == state then return end
@@ -1972,6 +1999,9 @@ function RoseUI:CreateWindow(options)
                 cb(val)
             end
             
+            local inputConn
+            local UserInputService = game:GetService("UserInputService")
+            
             local function toggleDropdown()
                 isOpen = not isOpen
                 if isOpen then
@@ -1987,13 +2017,40 @@ function RoseUI:CreateWindow(options)
                     tweenService:Create(arrow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 180, TextColor3 = TEXT_COLOR}):Play()
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0}):Play()
                     tweenService:Create(dropMenuBg, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, math.clamp(listHeight, 10, 150))}):Play()
+                    
+                    if not inputConn then
+                        inputConn = UserInputService.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                                local mPos = input.Position
+                                local function isInside(gui)
+                                    if not gui.Visible then return false end
+                                    local absPos = gui.AbsolutePosition
+                                    local absSize = gui.AbsoluteSize
+                                    return mPos.X >= absPos.X and mPos.X <= absPos.X + absSize.X and
+                                           mPos.Y >= absPos.Y and mPos.Y <= absPos.Y + absSize.Y
+                                end
+                                
+                                if not isInside(dropMenuBg) and not isInside(dropBtn) then
+                                    toggleDropdown()
+                                end
+                            end
+                        end)
+                    end
                 else
                     tweenService:Create(arrow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Rotation = 0, TextColor3 = Color3.fromRGB(150, 120, 130)}):Play()
                     tweenService:Create(outline, TweenInfo.new(0.3), {Transparency = 0.8}):Play()
                     local clsTween = tweenService:Create(dropMenuBg, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, 0)})
                     clsTween:Play()
-                    clsTween.Completed:Wait()
-                    if not isOpen then dropMenuBg.Visible = false end -- Check falls user schnell double clickt
+                    
+                    if inputConn then
+                        inputConn:Disconnect()
+                        inputConn = nil
+                    end
+                    
+                    task.spawn(function()
+                        clsTween.Completed:Wait()
+                        if not isOpen then dropMenuBg.Visible = false end -- Check falls user schnell double clickt
+                    end)
                 end
             end
             
