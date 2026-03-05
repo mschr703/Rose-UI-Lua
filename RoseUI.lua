@@ -2021,13 +2021,27 @@ function RoseUI:CreateWindow(options)
                     if not inputConn then
                         inputConn = UserInputService.InputBegan:Connect(function(input)
                             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                                local mPos = input.Position
+                                local lp = game:GetService("Players").LocalPlayer
+                                if not lp then return end
+                                local mouse = lp:GetMouse()
+                                local mx, my = mouse.X, mouse.Y
+                                
+                                -- GuiInset Correction: ScreenGui mit IgnoreGuiInset berücksichtigt (default 36px Topbar in Roblox)
+                                -- AbsolutePosition beinhaltet Topbar-Offset nicht immer konsistent mit Mouse y. GetMouse() y beinhaltet Topbar nicht.
+                                -- The safest cross-method is using AbsolutePosition + GUI Inset check or just adding 36 manually if an inset applies.
+                                -- Simple Bounds Check (Adding 36 margin of error for TopBar if necessary):
                                 local function isInside(gui)
                                     if not gui.Visible then return false end
                                     local absPos = gui.AbsolutePosition
                                     local absSize = gui.AbsoluteSize
-                                    return mPos.X >= absPos.X and mPos.X <= absPos.X + absSize.X and
-                                           mPos.Y >= absPos.Y and mPos.Y <= absPos.Y + absSize.Y
+                                    
+                                    -- Check both raw Mouse Y and Mouse Y + 36 (TopBar Height in standard Roblox)
+                                    local insideRaw = mx >= absPos.X and mx <= absPos.X + absSize.X and
+                                           my >= absPos.Y and my <= absPos.Y + absSize.Y
+                                    local insideTopBar = mx >= absPos.X and mx <= absPos.X + absSize.X and
+                                           (my + 36) >= absPos.Y and (my + 36) <= absPos.Y + absSize.Y
+                                           
+                                    return insideRaw or insideTopBar
                                 end
                                 
                                 if not isInside(dropMenuBg) and not isInside(dropBtn) then
@@ -2060,6 +2074,13 @@ function RoseUI:CreateWindow(options)
             if scrollFrame then scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(closeIfOpen) end
             bodyContainer:GetPropertyChangedSignal("Position"):Connect(closeIfOpen)
             bodyContainer:GetPropertyChangedSignal("AbsoluteSize"):Connect(closeIfOpen)
+            
+            -- Close when Tab switches (Page becomes invisible)
+            page:GetPropertyChangedSignal("Visible"):Connect(function()
+                if not page.Visible and isOpen then
+                    toggleDropdown()
+                end
+            end)
 
             dropBtn.MouseEnter:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.5}):Play() end)
             dropBtn.MouseLeave:Connect(function() tweenService:Create(outline, TweenInfo.new(0.2), {Transparency = isOpen and 0 or 0.8}):Play() end)
