@@ -88,8 +88,8 @@ function RoseUI:Notify(options)
     end
 
     local notifFrame = Instance.new("Frame")
-    notifFrame.Size = UDim2.new(0, 250, 0, 70)
-    notifFrame.Position = UDim2.new(1, 10, 1, -80)
+    notifFrame.Size = UDim2.new(0, 250, 0, options.Button1 and 95 or 70)
+    notifFrame.Position = UDim2.new(1, 10, 1, options.Button1 and -105 or -80)
     notifFrame.BackgroundColor3 = CARD_COLOR
     notifFrame.BackgroundTransparency = 0.25 -- Acrylic look
     notifFrame.BorderSizePixel = 0
@@ -157,8 +157,9 @@ function RoseUI:Notify(options)
 
     for _, child in pairs(notifGui:GetChildren()) do
         if child:IsA("Frame") and child ~= notifFrame then
+            local offsetHeight = options.Button1 and 105 or 80
             tweenService:Create(child, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {
-                Position = UDim2.new(1, -260, 1, (child.Position.Y.Offset - 80))
+                Position = UDim2.new(1, -260, 1, (child.Position.Y.Offset - offsetHeight))
             }):Play()
         end
     end
@@ -175,7 +176,7 @@ function RoseUI:Notify(options)
     titleLbl.Parent = notifFrame
 
     local textLbl = Instance.new("TextLabel")
-    textLbl.Size = UDim2.new(1, -20, 0, 35)
+    textLbl.Size = UDim2.new(1, -20, 0, options.Button1 and 25 or 35)
     textLbl.Position = UDim2.new(0, 10, 0, 30)
     textLbl.BackgroundTransparency = 1
     textLbl.Text = text
@@ -186,6 +187,37 @@ function RoseUI:Notify(options)
     textLbl.TextWrapped = true
     textLbl.Parent = notifFrame
 
+    local function dismissNotif()
+        if notifFrame.Parent then
+            local out = tweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, notifFrame.Position.Y.Offset)})
+            out:Play()
+            out.Completed:Wait()
+            pcall(function() blurPart:Destroy() end)
+            pcall(function() blurConn:Disconnect() end)
+            notifFrame:Destroy()
+        end
+    end
+
+    if options.Button1 then
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -20, 0, 24)
+        btn.Position = UDim2.new(0, 10, 0, 60)
+        btn.BackgroundColor3 = HEADER_COLOR
+        btn.Text = options.Button1
+        btn.TextColor3 = TEXT_COLOR
+        btn.TextSize = 12
+        btn.Font = Enum.Font.GothamBold
+        btn.Parent = notifFrame
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+        
+        btn.MouseButton1Click:Connect(function()
+            if options.Button1Callback then
+                task.spawn(options.Button1Callback)
+            end
+            dismissNotif()
+        end)
+    end
+
     local line = Instance.new("Frame")
     line.Size = UDim2.new(0, 0, 0, 2)
     line.Position = UDim2.new(0, 0, 1, -2)
@@ -193,16 +225,12 @@ function RoseUI:Notify(options)
     line.BorderSizePixel = 0
     line.Parent = notifFrame
 
-    tweenService:Create(notifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, -80)}):Play()
+    local offsetHeight = options.Button1 and -105 or -80
+    tweenService:Create(notifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, offsetHeight)}):Play()
     tweenService:Create(line, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(1, -2, 0, 2)}):Play()
 
     task.delay(dur, function()
-        local out = tweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, notifFrame.Position.Y.Offset)})
-        out:Play()
-        out.Completed:Wait()
-        pcall(function() blurPart:Destroy() end)
-        pcall(function() blurConn:Disconnect() end)
-        notifFrame:Destroy()
+        dismissNotif()
     end)
 end
 
