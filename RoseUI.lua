@@ -2,6 +2,14 @@
 --  ROSE UI FRAMEWORK (V3 - Windows Resizing, Animations, Premium Dropdowns)
 --=============================================================================--
 local RoseUI = {}
+RoseUI.SafeMode = false
+pcall(function()
+    local execName = identifyexecutor and identifyexecutor() or ""
+    if string.find(string.lower(execName), "xeno") or type(getcustomasset) == "nil" then
+        RoseUI.SafeMode = true
+    end
+end)
+
 local tweenService = game:GetService("TweenService")
 local coreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
@@ -88,8 +96,8 @@ function RoseUI:Notify(options)
     end
 
     local notifFrame = Instance.new("Frame")
-    notifFrame.Size = UDim2.new(0, 250, 0, options.Button1 and 95 or 70)
-    notifFrame.Position = UDim2.new(1, 10, 1, options.Button1 and -105 or -80)
+    notifFrame.Size = UDim2.new(0, 250, 0, 70)
+    notifFrame.Position = UDim2.new(1, 10, 1, -80)
     notifFrame.BackgroundColor3 = CARD_COLOR
     notifFrame.BackgroundTransparency = 0.25 -- Acrylic look
     notifFrame.BorderSizePixel = 0
@@ -157,9 +165,8 @@ function RoseUI:Notify(options)
 
     for _, child in pairs(notifGui:GetChildren()) do
         if child:IsA("Frame") and child ~= notifFrame then
-            local offsetHeight = options.Button1 and 105 or 80
             tweenService:Create(child, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {
-                Position = UDim2.new(1, -260, 1, (child.Position.Y.Offset - offsetHeight))
+                Position = UDim2.new(1, -260, 1, (child.Position.Y.Offset - 80))
             }):Play()
         end
     end
@@ -176,7 +183,7 @@ function RoseUI:Notify(options)
     titleLbl.Parent = notifFrame
 
     local textLbl = Instance.new("TextLabel")
-    textLbl.Size = UDim2.new(1, -20, 0, options.Button1 and 25 or 35)
+    textLbl.Size = UDim2.new(1, -20, 0, 35)
     textLbl.Position = UDim2.new(0, 10, 0, 30)
     textLbl.BackgroundTransparency = 1
     textLbl.Text = text
@@ -187,37 +194,6 @@ function RoseUI:Notify(options)
     textLbl.TextWrapped = true
     textLbl.Parent = notifFrame
 
-    local function dismissNotif()
-        if notifFrame.Parent then
-            local out = tweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, notifFrame.Position.Y.Offset)})
-            out:Play()
-            out.Completed:Wait()
-            pcall(function() blurPart:Destroy() end)
-            pcall(function() blurConn:Disconnect() end)
-            notifFrame:Destroy()
-        end
-    end
-
-    if options.Button1 then
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -20, 0, 24)
-        btn.Position = UDim2.new(0, 10, 0, 60)
-        btn.BackgroundColor3 = HEADER_COLOR
-        btn.Text = options.Button1
-        btn.TextColor3 = TEXT_COLOR
-        btn.TextSize = 12
-        btn.Font = Enum.Font.GothamBold
-        btn.Parent = notifFrame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-        
-        btn.MouseButton1Click:Connect(function()
-            if options.Button1Callback then
-                task.spawn(options.Button1Callback)
-            end
-            dismissNotif()
-        end)
-    end
-
     local line = Instance.new("Frame")
     line.Size = UDim2.new(0, 0, 0, 2)
     line.Position = UDim2.new(0, 0, 1, -2)
@@ -225,12 +201,16 @@ function RoseUI:Notify(options)
     line.BorderSizePixel = 0
     line.Parent = notifFrame
 
-    local offsetHeight = options.Button1 and -105 or -80
-    tweenService:Create(notifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, offsetHeight)}):Play()
+    tweenService:Create(notifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -260, 1, -80)}):Play()
     tweenService:Create(line, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(1, -2, 0, 2)}):Play()
 
     task.delay(dur, function()
-        dismissNotif()
+        local out = tweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, notifFrame.Position.Y.Offset)})
+        out:Play()
+        out.Completed:Wait()
+        pcall(function() blurPart:Destroy() end)
+        pcall(function() blurConn:Disconnect() end)
+        notifFrame:Destroy()
     end)
 end
 
@@ -979,8 +959,27 @@ function RoseUI:CreateWindow(options)
     end
     
     function WindowObj:MakeTab(tabOptions)
-        local tabName = tabOptions.Name or "Tab"
+        local rawName = tabOptions.Name or "Tab"
+        local tabName = rawName
+        local extractedEmoji = nil
+        
+        -- Smart Parsing: If there's an Emoji buried in the name, pull it out automatically!
+        -- Matches most common emoji ranges (UTF8) loosely by finding non-ascii leading characters before text.
+        local foundEmoji, cleanName = utf8.charpattern and string.match(rawName, "^([%z\1-\127\194-\244][\128-\191]*)%s*(.*)")
+        -- Fallback lua match for emojis: anything outside standard ascii range
+        if not foundEmoji then
+            foundEmoji, cleanName = string.match(rawName, "^([^%w%pn]+)%s*(.*)")
+        end
+        
+        if foundEmoji and foundEmoji ~= "" and cleanName and cleanName ~= "" then
+            -- We successfully stripped an emoji! 
+            extractedEmoji = foundEmoji
+            tabName = cleanName
+        end
+        
         local tabIcon = tabOptions.Icon or "rbxassetid://10652380582" -- Default Icon
+        local emojiIcon = tabOptions.EmojiIcon or extractedEmoji
+        
         local noSeparator = tabOptions.NoSeparator or false
         local forceSeparator = tabOptions.ForceSeparator or false
         
@@ -1033,7 +1032,13 @@ function RoseUI:CreateWindow(options)
         tabLabel.ZIndex = 5
         tabLabel.Parent = tabBtn
 
-        if tabIcon == "" then
+        if RoseUI.SafeMode and emojiIcon then
+            tabIconImg.Visible = false
+            tabIconText.Visible = true
+            tabIconText.Text = emojiIcon
+            tabLabel.Size = UDim2.new(1, -35, 1, 0)
+            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+        elseif tabIcon == "" then
             tabIconImg.Visible = false
             tabIconText.Visible = false
             tabLabel.Size = UDim2.new(1, -20, 1, 0)
@@ -3727,6 +3732,50 @@ function RoseUI:CreateWindow(options)
         Default = currentThemeName,
         Callback = function(themeName)
             if WindowObj.SetTheme then WindowObj:SetTheme(themeName) end
+        end
+    })
+    
+    local InitialAntiAfkConn = nil
+    SettingsTab:AddToggle({
+        Name = "🛡️ Rose Anti-AFK (Secure)",
+        Description = "Bypasses the 20-minute idle kick natively without jumping or moving.",
+        Default = true,
+        Callback = function(state)
+            local function enableAntiAfk()
+                local gc = getconnections or get_signal_cons
+                if gc then
+                    for _, conn in ipairs(gc(game.Players.LocalPlayer.Idled)) do
+                        if conn.Disable then conn:Disable() end
+                    end
+                else
+                    if not InitialAntiAfkConn then
+                        local vu = game:GetService("VirtualUser")
+                        InitialAntiAfkConn = game.Players.LocalPlayer.Idled:Connect(function()
+                            vu:CaptureController()
+                            vu:ClickButton2(Vector2.new())
+                        end)
+                    end
+                end
+            end
+            
+            local function disableAntiAfk()
+                local gc = getconnections or get_signal_cons
+                if gc then
+                    for _, conn in ipairs(gc(game.Players.LocalPlayer.Idled)) do
+                        if conn.Enable then conn:Enable() end
+                    end
+                end
+                if InitialAntiAfkConn then
+                    InitialAntiAfkConn:Disconnect()
+                    InitialAntiAfkConn = nil
+                end
+            end
+
+            if state then
+                enableAntiAfk()
+            else
+                disableAntiAfk()
+            end
         end
     })
     
