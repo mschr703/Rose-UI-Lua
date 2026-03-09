@@ -15,6 +15,27 @@ local coreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
+-- ========================================================
+-- 🛡️ ROBUST ANTI-AFK (Build into RoseUI Core)
+-- ========================================================
+task.spawn(function()
+    pcall(function()
+        if getconnections then
+            for _, conn in ipairs(getconnections(game:GetService("Players").LocalPlayer.Idled)) do
+                conn:Disable()
+            end
+        end
+    end)
+    pcall(function()
+        local VirtualUser = game:GetService("VirtualUser")
+        game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end)
+end)
+-- ========================================================
+
 local RoseUI_Themes = {
     ["Dark Rose"] = {
         Header = Color3.fromRGB(190, 25, 45),
