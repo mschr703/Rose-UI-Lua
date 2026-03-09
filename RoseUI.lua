@@ -295,7 +295,7 @@ function RoseUI:CreateWindow(options)
         local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
         if getasset and type(getasset) == "function" then
             local path = "RoseHub/assets/rose_logo_v3_small.png"
-            if isfile and isfile(path) then mobileOpenBtn.Image = getasset(path) end
+            if isfile and isfile(path) then pcall(function() mobileOpenBtn.Image = getasset(path) end) end
         end
     end)
 
@@ -448,14 +448,18 @@ function RoseUI:CreateWindow(options)
     task.spawn(function()
         local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
         if getasset and type(getasset) == "function" then
-            if not isfolder("RoseHub") then makefolder("RoseHub") end
-            if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
-            local path = "RoseHub/assets/rose_logo_v3_small.png"
-            if not isfile(path) then
-                local success, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/roselogo.png") end)
-                if success and data then writefile(path, data) end
-            end
-            if isfile(path) then headerLogo.Image = getasset(path) end
+            pcall(function()
+                if isfolder and makefolder then
+                    if not isfolder("RoseHub") then makefolder("RoseHub") end
+                    if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
+                end
+                local path = "RoseHub/assets/rose_logo_v3_small.png"
+                if isfile and not isfile(path) and writefile then
+                    local success, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/roselogo.png") end)
+                    if success and data then writefile(path, data) end
+                end
+                if isfile and isfile(path) then headerLogo.Image = getasset(path) end
+            end)
         end
     end)
     
@@ -552,33 +556,37 @@ function RoseUI:CreateWindow(options)
     task.spawn(function()
         local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
         if getasset and type(getasset) == "function" then
-            if not isfolder("RoseHub") then makefolder("RoseHub") end
-            if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
-            
-            -- Reverting to Standard Cursor per User Request            
-            -- Load Discord / GitHub icon
-            local discordPath = "RoseHub/assets/discordlogo.png"
-            if not isfile(discordPath) then
-                local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/discordlogo.png") end)
-                if s and d then writefile(discordPath, d) end
-            end
-            if isfile(discordPath) then discordIcon.Image = getasset(discordPath) end
+            pcall(function()
+                if isfolder and makefolder then
+                    if not isfolder("RoseHub") then makefolder("RoseHub") end
+                    if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
+                end
+                
+                -- Reverting to Standard Cursor per User Request            
+                -- Load Discord / GitHub icon
+                local discordPath = "RoseHub/assets/discordlogo.png"
+                if isfile and not isfile(discordPath) and writefile then
+                    local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/discordlogo.png") end)
+                    if s and d then writefile(discordPath, d) end
+                end
+                if isfile and isfile(discordPath) then discordIcon.Image = getasset(discordPath) end
 
-            -- Load Tabout icon
-            local taboutPath = "RoseHub/assets/tabout_white.png"
-            if not isfile(taboutPath) then
-                local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/tabout.png") end)
-                if s and d then writefile(taboutPath, d) end
-            end
-            if isfile(taboutPath) then maxIcon.Image = getasset(taboutPath) end
-            
-            -- Load Cross icon
-            local crossPath = "RoseHub/assets/cross_white.png"
-            if not isfile(crossPath) then
-                local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/cross.png") end)
-                if s and d then writefile(crossPath, d) end
-            end
-            if isfile(crossPath) then closeIcon.Image = getasset(crossPath) end
+                -- Load Tabout icon
+                local taboutPath = "RoseHub/assets/tabout_white.png"
+                if isfile and not isfile(taboutPath) and writefile then
+                    local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/tabout.png") end)
+                    if s and d then writefile(taboutPath, d) end
+                end
+                if isfile and isfile(taboutPath) then maxIcon.Image = getasset(taboutPath) end
+                
+                -- Load Cross icon
+                local crossPath = "RoseHub/assets/cross_white.png"
+                if isfile and not isfile(crossPath) and writefile then
+                    local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/cross.png") end)
+                    if s and d then writefile(crossPath, d) end
+                end
+                if isfile and isfile(crossPath) then closeIcon.Image = getasset(crossPath) end
+            end)
         end
     end)
     
@@ -3973,17 +3981,26 @@ function RoseUI:CreateWindow(options)
         Callback = function()
             RoseUI:Notify({Title = "Hop", Text = "Finding a new server...", Duration = 3})
             local HttpService, TPService = game:GetService("HttpService"), game:GetService("TeleportService")
-            local sfUrl = "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=%s&limit=100"
-            local req = request({Url = string.format(sfUrl, game.PlaceId, "Desc")})
-            local body = HttpService:JSONDecode(req.Body)
-            if body and body.data then
-                for i, v in next, body.data do
-                    if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= game.JobId then
-                        TPService:TeleportToPlaceInstance(game.PlaceId, v.id, game.Players.LocalPlayer)
-                        break
+            local sfUrl = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+            local reqFunc = request or http_request or (http and http.request) or (fluxus and fluxus.request)
+            if not reqFunc then
+                RoseUI:Notify({Title = "Error", Text = "Your executor does not support Server Hopping.", Duration = 4})
+                return
+            end
+            pcall(function()
+                local req = reqFunc({Url = sfUrl, Method = "GET"})
+                if req and req.Body then
+                    local body = HttpService:JSONDecode(req.Body)
+                    if body and body.data then
+                        for i, v in next, body.data do
+                            if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= game.JobId then
+                                TPService:TeleportToPlaceInstance(game.PlaceId, v.id, game.Players.LocalPlayer)
+                                break
+                            end
+                        end
                     end
                 end
-            end
+            end)
         end
     })
     
