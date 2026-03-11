@@ -948,7 +948,9 @@ function RoseUI:CreateWindow(options)
                 data[elem.Name] = {elem.Value.R, elem.Value.G, elem.Value.B}
             elseif elem.Type == "Keybind" then
                 data[elem.Name] = elem.Value.Name
-            else
+            elseif elem.Type == "ToggleSlider" then
+                data[elem.Name] = {Toggle = elem.ToggleValue, Slider = elem.SliderValue}
+            elseif elem.Value ~= nil then
                 data[elem.Name] = elem.Value
             end
         end
@@ -974,11 +976,19 @@ function RoseUI:CreateWindow(options)
                     if data[elem.Name] ~= nil then
                         if elem.Type == "ColorPicker" then
                             local rgb = data[elem.Name]
-                            elem:Set(Color3.new(rgb[1], rgb[2], rgb[3]))
+                            if type(rgb) == "table" and #rgb >= 3 then
+                                pcall(function() elem:Set(Color3.new(rgb[1], rgb[2], rgb[3])) end)
+                            end
                         elseif elem.Type == "Keybind" then
-                            elem:Set(Enum.KeyCode[data[elem.Name]])
+                            pcall(function() elem:Set(Enum.KeyCode[data[elem.Name]]) end)
+                        elseif elem.Type == "ToggleSlider" then
+                            local vals = data[elem.Name]
+                            if type(vals) == "table" then
+                                if vals.Toggle ~= nil then pcall(function() elem:SetToggle(vals.Toggle) end) end
+                                if vals.Slider ~= nil then pcall(function() elem:SetSlider(vals.Slider) end) end
+                            end
                         else
-                            elem:Set(data[elem.Name])
+                            pcall(function() elem:Set(data[elem.Name]) end)
                         end
                     end
                 end
@@ -3765,25 +3775,69 @@ function RoseUI:CreateWindow(options)
     })
     
     local InitialAntiAfkConn = nil
+    local AfkThread = nil
+    local AfkInputConn = nil
+    local AfkActive = false
+
     SettingsTab:AddToggle({
-        Name = "🛡️ Rose Anti-AFK (Secure)",
-        Description = "Bypasses the 20-minute idle kick natively without jumping or moving.",
+        Name = "🛡️ Rose Anti-AFK (Secure & Physical)",
+        Description = "Bypasses idle kick natively, plus physical fallback (W/S) every 19 mins if idle.",
         Default = true,
         Callback = function(state)
+            AfkActive = state
+            
             local function enableAntiAfk()
+                -- 1. Native Idled Bypass
                 local gc = getconnections or get_signal_cons
                 if gc then
                     for _, conn in ipairs(gc(game.Players.LocalPlayer.Idled)) do
-                        if conn.Disable then conn:Disable() end
+                        pcall(function() if conn.Disable then conn:Disable() end end)
                     end
-                else
-                    if not InitialAntiAfkConn then
-                        local vu = game:GetService("VirtualUser")
-                        InitialAntiAfkConn = game.Players.LocalPlayer.Idled:Connect(function()
+                end
+                
+                if not InitialAntiAfkConn then
+                    local vu = game:GetService("VirtualUser")
+                    InitialAntiAfkConn = game.Players.LocalPlayer.Idled:Connect(function()
+                        pcall(function()
                             vu:CaptureController()
                             vu:ClickButton2(Vector2.new())
                         end)
-                    end
+                    end)
+                end
+
+                -- 2. Physical W/S Fallback Loop
+                if not AfkThread then
+                    local vim = game:GetService("VirtualInputManager")
+                    local uis = game:GetService("UserInputService")
+                    local lastMoveTick = tick()
+                    
+                    AfkInputConn = uis.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType == Enum.UserInputType.MouseMovement then
+                            lastMoveTick = tick()
+                        end
+                    end)
+
+                    AfkThread = task.spawn(function()
+                        local toggleW = true
+                        while AfkActive do
+                            task.wait(5)
+                            -- 1140 seconds = 19 minutes
+                            if tick() - lastMoveTick >= 1140 then
+                                local key = toggleW and Enum.KeyCode.W or Enum.KeyCode.S
+                                toggleW = not toggleW
+                                
+                                pcall(function()
+                                    if vim then
+                                        vim:SendKeyEvent(true, key, false, game)
+                                        task.wait(0.5)
+                                        vim:SendKeyEvent(false, key, false, game)
+                                    end
+                                end)
+                                
+                                lastMoveTick = tick()
+                            end
+                        end
+                    end)
                 end
             end
             
@@ -3791,13 +3845,18 @@ function RoseUI:CreateWindow(options)
                 local gc = getconnections or get_signal_cons
                 if gc then
                     for _, conn in ipairs(gc(game.Players.LocalPlayer.Idled)) do
-                        if conn.Enable then conn:Enable() end
+                        pcall(function() if conn.Enable then conn:Enable() end end)
                     end
                 end
                 if InitialAntiAfkConn then
                     InitialAntiAfkConn:Disconnect()
                     InitialAntiAfkConn = nil
                 end
+                if AfkInputConn then
+                    AfkInputConn:Disconnect()
+                    AfkInputConn = nil
+                end
+                AfkThread = nil
             end
 
             if state then
