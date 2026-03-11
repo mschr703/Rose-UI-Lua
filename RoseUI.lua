@@ -2155,12 +2155,12 @@ function RoseUI:CreateWindow(options)
                 listHeight = #newOptions * 25
                 dropMenu.CanvasSize = UDim2.new(0, 0, 0, listHeight)
                 
-                for _, optText in pairs(newOptions) do
+                for _, optText in pairs(newOptions or {}) do
                     local optBtn = Instance.new("TextButton")
                     optBtn.Size = UDim2.new(1, -6, 0, 25)
                     optBtn.BackgroundColor3 = Color3.fromRGB(40, 25, 30)
                     optBtn.BackgroundTransparency = 0
-                    optBtn.Text = "  " .. optText
+                    optBtn.Text = "  " .. tostring(optText)
                     optBtn.TextColor3 = TEXT_COLOR
                     optBtn.Font = Enum.Font.Gotham
                     optBtn.TextSize = 11
