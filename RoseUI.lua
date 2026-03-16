@@ -3932,15 +3932,16 @@ function RoseUI:CreateWindow(options)
     -- ========================================================
     -- DEFAULT TABS (Settings, Debug, Config)
     -- ========================================================
-    local SettingsTab = WindowObj:MakeTab({
-        Name = "Settings",
-        Icon = "settings.png",
-        PremiumOnly = false,
-        ForceSeparator = true,
-        LayoutOrder = 9997
-    })
-    WindowObj.SettingsTab = SettingsTab
-    local settingsSec = SettingsTab:AddSection("Window Settings ⚙️")
+    if not options.HideDefaultTabs then
+        local SettingsTab = WindowObj:MakeTab({
+            Name = "Settings",
+            Icon = "settings.png",
+            PremiumOnly = false,
+            ForceSeparator = true,
+            LayoutOrder = 9997
+        })
+        WindowObj.SettingsTab = SettingsTab
+        local settingsSec = SettingsTab:AddSection("Window Settings ⚙️")
     SettingsTab:AddKeybind({
         Name = "Toggle Hub UI",
         Default = Enum.KeyCode.RightAlt,
@@ -4191,15 +4192,16 @@ function RoseUI:CreateWindow(options)
         end
     })
 
-    local ConfigTab = WindowObj:MakeTab({
-        Name = "Config",
-        Icon = "disk.png",
-        PremiumOnly = false,
-        NoSeparator = true,
-        LayoutOrder = 9999
-    })
-    WindowObj.ConfigTab = ConfigTab
-    WindowObj:CreateConfigManager(ConfigTab)
+        local ConfigTab = WindowObj:MakeTab({
+            Name = "Config",
+            Icon = "disk.png",
+            PremiumOnly = false,
+            NoSeparator = true,
+            LayoutOrder = 9999
+        })
+        WindowObj.ConfigTab = ConfigTab
+        WindowObj:CreateConfigManager(ConfigTab)
+    end
 
     -- ================= INTRO ANIMATION =================
     dragFrame.Size = UDim2.new(0, 0, 0, 0)
@@ -4478,7 +4480,8 @@ function RoseUI:CreateMasterHub(gamesTable)
     local HubWin = RoseUI:CreateWindow({
         Name = "Rose Hub | Game Selector",
         HubType = "RoseUI",
-        WindowName = "RoseUI_HubWindow"
+        WindowName = "RoseUI_HubWindow",
+        HideDefaultTabs = true
     })
     
     local GalleryTab = HubWin:MakeTab({Name = "Game Gallery"})
