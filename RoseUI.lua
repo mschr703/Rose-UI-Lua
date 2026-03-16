@@ -4230,82 +4230,120 @@ function RoseUI:CreateWindow(options)
     dragFrame.Size = UDim2.new(0, 0, 0, 0)
     dragFrame.ClipsDescendants = true
     
-    local splashOrigin = Instance.new("Frame")
-    splashOrigin.Size = UDim2.new(0, 0, 0, 0)
-    splashOrigin.Position = UDim2.new(0.5, 0, 0.5, 0)
-    splashOrigin.BackgroundColor3 = HEADER_COLOR
-    splashOrigin.ZIndex = 100
-    splashOrigin.Parent = screenGui
-    Instance.new("UICorner", splashOrigin).CornerRadius = UDim.new(1, 0)
+    local introBg = Instance.new("Frame")
+    introBg.Size = UDim2.new(1, 0, 1, 0)
+    introBg.BackgroundColor3 = Color3.fromRGB(12, 8, 12)
+    introBg.ZIndex = 999
+    introBg.Parent = screenGui
     
-    local ripple = Instance.new("Frame")
-    ripple.Size = UDim2.new(0, 0, 0, 0)
-    ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
-    ripple.BackgroundTransparency = 1
-    ripple.ZIndex = 99
-    ripple.Parent = screenGui
-    Instance.new("UICorner", ripple).CornerRadius = UDim.new(1, 0)
+    local titleTextAnim = Instance.new("TextLabel")
+    titleTextAnim.Size = UDim2.new(0, 400, 0, 100)
+    titleTextAnim.Position = UDim2.new(0.5, -200, 0.5, -50)
+    titleTextAnim.BackgroundTransparency = 1
     
-    local rippleStroke = Instance.new("UIStroke")
-    rippleStroke.Color = HEADER_COLOR
-    rippleStroke.Thickness = 6
-    rippleStroke.Parent = ripple
+    -- Attempting to use a cursive-like Font natively in Roblox
+    local hasCursive, cursiveFont = pcall(function() return Font.new("rbxasset://fonts/families/Parisienne.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal) end)
+    if hasCursive and cursiveFont then 
+        titleTextAnim.FontFace = cursiveFont 
+    else 
+        titleTextAnim.Font = Enum.Font.GothamBold 
+    end
     
-    local splashText = Instance.new("TextLabel")
-    splashText.Size = UDim2.new(0, 200, 0, 50)
-    splashText.Position = UDim2.new(0.5, -100, 0.5, -25)
-    splashText.BackgroundTransparency = 1
-    splashText.Text = "R o s e  H u b"
-    splashText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    splashText.TextTransparency = 1
-    splashText.Font = Enum.Font.GothamBold
-    splashText.TextSize = 28
-    splashText.ZIndex = 110
-    splashText.Parent = screenGui
+    titleTextAnim.Text = titleText
+    if titleText == "Rose Hub | Game Selector" then titleTextAnim.Text = "RoseHub" end
     
-    local splashTextShadow = Instance.new("TextLabel")
-    splashTextShadow.Size = UDim2.new(1, 0, 1, 0)
-    splashTextShadow.Position = UDim2.new(0, 0, 0, 2)
-    splashTextShadow.BackgroundTransparency = 1
-    splashTextShadow.Text = "R o s e  H u b"
-    splashTextShadow.TextColor3 = HEADER_COLOR
-    splashTextShadow.TextTransparency = 1
-    splashTextShadow.Font = Enum.Font.GothamBold
-    splashTextShadow.TextSize = 28
-    splashTextShadow.ZIndex = 109
-    splashTextShadow.Parent = splashText
+    titleTextAnim.TextColor3 = Color3.fromRGB(240, 20, 50) -- Deep Red
+    titleTextAnim.TextSize = 75
+    titleTextAnim.ZIndex = 1000
+    titleTextAnim.Parent = introBg
+    
+    local grad = Instance.new("UIGradient")
+    grad.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.5, 0),
+        NumberSequenceKeypoint.new(0.501, 1),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    grad.Offset = Vector2.new(-0.5, 0)
+    grad.Parent = titleTextAnim
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 0
+    stroke.Color = Color3.fromRGB(255, 80, 100)
+    stroke.Transparency = 1
+    stroke.Parent = titleTextAnim
+
+    local penGlow = Instance.new("Frame")
+    penGlow.Size = UDim2.new(0, 15, 0, 15)
+    penGlow.Position = UDim2.new(0, -7.5, 0.5, -7.5) 
+    penGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    penGlow.ZIndex = 1001
+    penGlow.Parent = titleTextAnim
+    Instance.new("UICorner", penGlow).CornerRadius = UDim.new(1, 0)
+    
+    local penGlowOuter = Instance.new("Frame")
+    penGlowOuter.Size = UDim2.new(0, 40, 0, 40)
+    penGlowOuter.Position = UDim2.new(0.5, -20, 0.5, -20)
+    penGlowOuter.BackgroundColor3 = Color3.fromRGB(255, 20, 50)
+    penGlowOuter.BackgroundTransparency = 0.5
+    penGlowOuter.ZIndex = 1000
+    penGlowOuter.Parent = penGlow
+    Instance.new("UICorner", penGlowOuter).CornerRadius = UDim.new(1, 0)
 
     task.spawn(function()
-        -- Splash in
-        tweenService:Create(splashOrigin, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(0.5, -15, 0.5, -15)
-        }):Play()
         task.wait(0.3)
-        -- Ripple explode
-        tweenService:Create(ripple, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 250, 0, 250), Position = UDim2.new(0.5, -125, 0.5, -125)
-        }):Play()
-        tweenService:Create(rippleStroke, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Transparency = 1, Thickness = 0
-        }):Play()
-        -- Splash shrink and Drop Text
-        tweenService:Create(splashOrigin, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)
-        }):Play()
+        -- Glow pulse
+        local pulseTw = tweenService:Create(penGlowOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 60, 0, 60), BackgroundTransparency = 0.8})
+        pulseTw:Play()
         
-        tweenService:Create(splashText, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {TextTransparency = 0, Position = UDim2.new(0.5, -100, 0.5, -35)}):Play()
-        tweenService:Create(splashTextShadow, TweenInfo.new(0.5), {TextTransparency = 0.5}):Play()
+        -- Slow smooth writing
+        local twTime = 1.8 
+        local penTw = tweenService:Create(penGlow, TweenInfo.new(twTime, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {Position = UDim2.new(1, -7.5, 0.5, -7.5)})
+        local gradTw = tweenService:Create(grad, TweenInfo.new(twTime, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {Offset = Vector2.new(0.5, 0)})
         
-        task.wait(1.4)
+        penTw:Play()
+        gradTw:Play()
         
-        -- Text Fade out
-        tweenService:Create(splashText, TweenInfo.new(0.3), {TextTransparency = 1, Position = UDim2.new(0.5, -100, 0.5, -50)}):Play()
-        tweenService:Create(splashTextShadow, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+        local isPainting = true
+        task.spawn(function()
+            while isPainting do
+                task.wait(0.04)
+                if not penGlow or not titleTextAnim then break end
+                local spark = Instance.new("Frame")
+                spark.Size = UDim2.new(0, math.random(4, 8), 0, math.random(4, 8))
+                spark.Position = penGlow.Position + UDim2.new(0, math.random(-5, 5), 0, math.random(-15, 15))
+                spark.BackgroundColor3 = Color3.fromRGB(255, math.random(50, 100), math.random(50, 100))
+                spark.Rotation = math.random(0, 360)
+                spark.ZIndex = 1002
+                spark.Parent = titleTextAnim
+                Instance.new("UICorner", spark).CornerRadius = UDim.new(1, 0)
+                
+                tweenService:Create(spark, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 0, 0, 0), 
+                    Position = spark.Position + UDim2.new(0, math.random(-30, 30), 0, math.random(10, 40)), 
+                    BackgroundTransparency = 1,
+                    Rotation = spark.Rotation + math.random(90, 180)
+                }):Play()
+                game.Debris:AddItem(spark, 0.7)
+            end
+        end)
+        
+        penTw.Completed:Wait()
+        isPainting = false
+        pulseTw:Cancel()
+        
+        -- Fancy finish pop
+        tweenService:Create(penGlow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Position = UDim2.new(1, 0, 0.5, 0)}):Play()
+        tweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 3, Transparency = 0}):Play()
+        
         task.wait(0.3)
+        tweenService:Create(stroke, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Thickness = 0, Transparency = 1}):Play()
+        tweenService:Create(titleTextAnim, TweenInfo.new(0.6), {TextTransparency = 1, Size = UDim2.new(0, 450, 0, 120), Position = UDim2.new(0.5, -225, 0.5, -60)}):Play()
         
-        splashOrigin:Destroy()
-        ripple:Destroy()
-        splashText:Destroy()
+        local bgFade = tweenService:Create(introBg, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+        bgFade:Play()
+        bgFade.Completed:Wait()
+        introBg:Destroy()
         
         -- Open main window
         local openTw = tweenService:Create(dragFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = DEFAULT_SIZE})
