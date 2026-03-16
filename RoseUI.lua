@@ -243,8 +243,10 @@ function RoseUI:CreateWindow(options)
     
     local targetContainer = getTargetGui()
 
-    if targetContainer:FindFirstChild("RoseUI_Window") then
-        targetContainer.RoseUI_Window:Destroy()
+    local winName = options.WindowName or "RoseUI_Window"
+
+    if targetContainer:FindFirstChild(winName) then
+        targetContainer[winName]:Destroy()
     end
     
     if targetContainer:FindFirstChild("RoseUI_Notifs") then
@@ -252,14 +254,14 @@ function RoseUI:CreateWindow(options)
     end
     
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "RoseUI_Window"
+    screenGui.Name = winName
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     screenGui.IgnoreGuiInset = true
     screenGui.Parent = targetContainer
 
     local openBtnGui = Instance.new("ScreenGui")
-    openBtnGui.Name = "RoseUI_OpenBtn"
+    openBtnGui.Name = winName .. "_OpenBtn"
     openBtnGui.ResetOnSpawn = false
     openBtnGui.Enabled = false
     openBtnGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -516,6 +518,25 @@ function RoseUI:CreateWindow(options)
     local minBtn = createControlBtn("-", 1)
     local maxBtn = createControlBtn("", 2)
     
+    local homeBtn = createControlBtn("", 0.5)
+    local homeIcon = Instance.new("ImageLabel")
+    homeIcon.Size = UDim2.new(0, 14, 0, 14)
+    homeIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
+    homeIcon.BackgroundTransparency = 1
+    homeIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
+    homeIcon.Image = "rbxassetid://9505470550" -- Home Icon
+    homeIcon.ScaleType = Enum.ScaleType.Fit
+    homeIcon.ZIndex = 6
+    homeIcon.Parent = homeBtn
+
+    homeBtn.MouseButton1Click:Connect(function()
+        if _G.RoseHub_ShowHub then 
+            _G.RoseHub_ShowHub() 
+        else
+            RoseUI:Notify({Title = "🏠 Home", Text = "You are already at the Master Hub!", Duration = 3})
+        end
+    end)
+    
     local maxIcon = Instance.new("ImageLabel")
     maxIcon.Size = UDim2.new(0, 14, 0, 14)
     maxIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
@@ -578,6 +599,9 @@ function RoseUI:CreateWindow(options)
     
     closeBtn.MouseEnter:Connect(function() tweenService:Create(closeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end)
     closeBtn.MouseLeave:Connect(function() tweenService:Create(closeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
+
+    homeBtn.MouseEnter:Connect(function() tweenService:Create(homeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end)
+    homeBtn.MouseLeave:Connect(function() tweenService:Create(homeIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
 
     local isMinimized = false
     local isMaximized = false
@@ -3632,9 +3656,255 @@ function RoseUI:CreateWindow(options)
             table.insert(WindowObj.Elements, KeybindAPI)
             return KeybindAPI
         end
+        -- 11. GAME GALLERY
+        function TabObj:AddGameGallery(gOptions)
+            local itemsList = gOptions.Items or {}
+            
+            GLOBAL_ZINDEX = GLOBAL_ZINDEX + 10
+            local currentZ = GLOBAL_ZINDEX
+            
+            -- Search Bar Container
+            local searchFrame = Instance.new("Frame")
+            searchFrame.Size = UDim2.new(1, -10, 0, 42)
+            searchFrame.BackgroundColor3 = CARD_COLOR
+            searchFrame.ZIndex = currentZ
+            searchFrame.Parent = page
+            Instance.new("UICorner", searchFrame).CornerRadius = UDim.new(0, 6)
+            
+            local searchIcon = Instance.new("TextLabel")
+            searchIcon.Size = UDim2.new(0, 30, 0, 42)
+            searchIcon.Position = UDim2.new(0, 10, 0, 0)
+            searchIcon.BackgroundTransparency = 1
+            searchIcon.Text = "🔍"
+            searchIcon.TextColor3 = TEXT_COLOR
+            searchIcon.TextSize = 14
+            searchIcon.ZIndex = currentZ + 1
+            searchIcon.Parent = searchFrame
+            
+            local searchBox = Instance.new("TextBox")
+            searchBox.Size = UDim2.new(1, -50, 0, 42)
+            searchBox.Position = UDim2.new(0, 40, 0, 0)
+            searchBox.BackgroundTransparency = 1
+            searchBox.Text = ""
+            searchBox.ClearTextOnFocus = false
+            searchBox.PlaceholderText = "Search by game name or category..."
+            searchBox.PlaceholderColor3 = Color3.fromRGB(120, 100, 110)
+            searchBox.TextColor3 = TEXT_COLOR
+            searchBox.Font = Enum.Font.Gotham
+            searchBox.TextSize = 13
+            searchBox.TextXAlignment = Enum.TextXAlignment.Left
+            searchBox.ZIndex = currentZ + 1
+            searchBox.Parent = searchFrame
+            
+            -- Gallery Scroll Container
+            local galleryBg = Instance.new("Frame")
+            galleryBg.Size = UDim2.new(1, -10, 0, 320)
+            galleryBg.BackgroundColor3 = Color3.fromRGB(20, 10, 15)
+            galleryBg.ZIndex = currentZ
+            galleryBg.Parent = page
+            Instance.new("UICorner", galleryBg).CornerRadius = UDim.new(0, 6)
+            
+            local galleryScroll = Instance.new("ScrollingFrame")
+            galleryScroll.Size = UDim2.new(1, -16, 1, -16)
+            galleryScroll.Position = UDim2.new(0, 8, 0, 8)
+            galleryScroll.BackgroundTransparency = 1
+            galleryScroll.BorderSizePixel = 0
+            galleryScroll.ScrollBarThickness = 3
+            galleryScroll.ScrollBarImageColor3 = HEADER_COLOR
+            galleryScroll.ZIndex = currentZ + 1
+            galleryScroll.Parent = galleryBg
+            
+            local gridLayout = Instance.new("UIGridLayout")
+            gridLayout.CellSize = UDim2.new(0.5, -5, 0, 160)
+            gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+            gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            gridLayout.Parent = galleryScroll
+            
+            local cards = {}
+            
+            for i, itemData in ipairs(itemsList) do
+                local card = Instance.new("ImageButton")
+                card.BackgroundColor3 = CARD_COLOR
+                card.AutoButtonColor = false
+                card.ZIndex = currentZ + 2
+                card.Parent = galleryScroll
+                Instance.new("UICorner", card).CornerRadius = UDim.new(0, 6)
+                
+                -- Image Thumbnail
+                local thumb = Instance.new("ImageLabel")
+                thumb.Size = UDim2.new(1, 0, 0.65, 0)
+                thumb.BackgroundColor3 = Color3.fromRGB(15, 8, 12)
+                thumb.Image = "rbxassetid://" .. tostring(itemData.Image or "9330663183")
+                thumb.ScaleType = Enum.ScaleType.Crop
+                thumb.ZIndex = currentZ + 3
+                thumb.Parent = card
+                Instance.new("UICorner", thumb).CornerRadius = UDim.new(0, 6)
+                -- Bottom flat corner fix for the thumbnail
+                local botFix = Instance.new("Frame")
+                botFix.Size = UDim2.new(1, 0, 0, 6)
+                botFix.Position = UDim2.new(0, 0, 1, -6)
+                botFix.BackgroundColor3 = Color3.fromRGB(15, 8, 12)
+                botFix.BorderSizePixel = 0
+                botFix.ZIndex = currentZ + 3
+                botFix.Parent = thumb
+                
+                -- Gradient overlay for text readability
+                local overlay = Instance.new("Frame")
+                overlay.Size = UDim2.new(1, 0, 1, 0)
+                overlay.BackgroundColor3 = Color3.new(0,0,0)
+                overlay.BackgroundTransparency = 0.5
+                overlay.BorderSizePixel = 0
+                overlay.ZIndex = currentZ + 4
+                overlay.Parent = thumb
+                
+                local uigrad = Instance.new("UIGradient")
+                uigrad.Rotation = 90
+                uigrad.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+                uigrad.Parent = overlay
+                
+                -- Title
+                local title = Instance.new("TextLabel")
+                title.Size = UDim2.new(1, -20, 0, 25)
+                title.Position = UDim2.new(0, 10, 0.65, 5)
+                title.BackgroundTransparency = 1
+                title.Text = itemData.Name or "Unknown"
+                title.TextColor3 = TEXT_COLOR
+                title.Font = Enum.Font.GothamBold
+                title.TextSize = 13
+                title.TextXAlignment = Enum.TextXAlignment.Left
+                title.TextTruncate = Enum.TextTruncate.AtEnd
+                title.ZIndex = currentZ + 5
+                title.Parent = card
+                
+                -- Category Badge
+                local catBadge = Instance.new("Frame")
+                catBadge.Size = UDim2.new(0, 80, 0, 16)
+                catBadge.Position = UDim2.new(0, 10, 0.65, 30)
+                catBadge.BackgroundColor3 = HEADER_COLOR
+                catBadge.BackgroundTransparency = 0.5
+                catBadge.ZIndex = currentZ + 5
+                catBadge.Parent = card
+                Instance.new("UICorner", catBadge).CornerRadius = UDim.new(0, 4)
+                
+                local catLbl = Instance.new("TextLabel")
+                catLbl.Size = UDim2.new(1, 0, 1, 0)
+                catLbl.BackgroundTransparency = 1
+                catLbl.Text = string.upper(itemData.Category or "MINIGAME")
+                catLbl.TextColor3 = Color3.fromRGB(255, 230, 240)
+                catLbl.Font = Enum.Font.GothamBold
+                catLbl.TextSize = 10
+                catLbl.ZIndex = currentZ + 6
+                catLbl.Parent = catBadge
+                
+                -- Play Icon
+                local playIcon = Instance.new("TextLabel")
+                playIcon.Size = UDim2.new(0, 25, 0, 25)
+                playIcon.Position = UDim2.new(1, -35, 0.65, 15)
+                playIcon.BackgroundTransparency = 1
+                playIcon.Text = "▶"
+                playIcon.TextColor3 = HEADER_COLOR
+                playIcon.Font = Enum.Font.GothamBold
+                playIcon.TextSize = 18
+                playIcon.ZIndex = currentZ + 5
+                playIcon.Parent = card
+                
+                -- Selection Effects
+                local stroke = Instance.new("UIStroke")
+                stroke.Color = HEADER_COLOR
+                stroke.Thickness = 2
+                stroke.Transparency = 1
+                stroke.Parent = card
+                
+                card.MouseEnter:Connect(function() 
+                    tweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0}):Play()
+                    tweenService:Create(playIcon, TweenInfo.new(0.2), {TextColor3 = TEXT_COLOR}):Play()
+                    tweenService:Create(thumb, TweenInfo.new(0.3), {Size = UDim2.new(1.05, 0, 0.68, 0), Position = UDim2.new(-0.025, 0, -0.015, 0)}):Play()
+                end)
+                card.MouseLeave:Connect(function() 
+                    tweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 1}):Play()
+                    tweenService:Create(playIcon, TweenInfo.new(0.2), {TextColor3 = HEADER_COLOR}):Play()
+                    tweenService:Create(thumb, TweenInfo.new(0.3), {Size = UDim2.new(1, 0, 0.65, 0), Position = UDim2.new(0, 0, 0, 0)}):Play()
+                end)
+                
+                card.MouseButton1Click:Connect(function()
+                    if itemData.Callback then
+                        RoseUI:Notify({Title = "🚀 Launching", Text = "Loading " .. tostring(itemData.Name) .. "...", Duration = 2})
+                        itemData.Callback()
+                    end
+                end)
+                
+                table.insert(cards, {Gui = card, Data = itemData})
+            end
+            
+            gridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                galleryScroll.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y)
+            end)
+            
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                local q = string.lower(searchBox.Text)
+                for _, card in ipairs(cards) do
+                    if q == "" or string.find(string.lower(card.Data.Name or ""), q, 1, true) or string.find(string.lower(card.Data.Category or ""), q, 1, true) then
+                        card.Gui.Visible = true
+                    else
+                        card.Gui.Visible = false
+                    end
+                end
+            end)
+        end
 
         return TabObj
     end
+    
+    -- ========================================================
+    -- MASTER HUB GENERATOR EXTENSION
+    -- ========================================================
+    function RoseUI:CreateMasterHub(gamesTable)
+        _G.RoseHub_ShowHub = function()
+            local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
+            if getGui then getGui.Enabled = false end
+            local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
+            if getHub then getHub.Enabled = true end
+        end
+        
+        local function SafeLaunch(placeName, funcObj)
+            local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
+            if getGui then
+                getGui.Enabled = true
+            else
+                _G.Rose_SecureTicket = "ROSEHUB_" .. tostring(math.random(10000000, 99999999))
+                task.spawn(function()
+                    local s, e = pcall(funcObj)
+                    if not s then warn("[RoseHub] Load Error: " .. tostring(e)) end
+                end)
+            end
+            task.delay(0.2, function()
+                local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
+                if getHub then getHub.Enabled = false end
+            end)
+        end
+        
+        local HubWin = RoseUI:CreateWindow({
+            Name = "Rose Hub | Game Selector",
+            HubType = "RoseUI",
+            WindowName = "RoseUI_HubWindow"
+        })
+        
+        local GalleryTab = HubWin:MakeTab({Name = "Game Gallery"})
+        
+        -- Map SafeLaunch closures to the gamesTable
+        for _, g in ipairs(gamesTable) do
+            local originalCb = g.Callback
+            g.Callback = function() SafeLaunch(g.Name, originalCb) end
+        end
+        
+        GalleryTab:AddGameGallery({
+            Name = "Explore Games",
+            Items = gamesTable
+        })
+    end
+
     
     function WindowObj:CreateConfigManager(tab)
         local cfgSection = tab:AddSection("📁 Configuration Manager")
