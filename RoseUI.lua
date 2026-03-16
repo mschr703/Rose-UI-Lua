@@ -518,16 +518,7 @@ function RoseUI:CreateWindow(options)
     local minBtn = createControlBtn("-", 1)
     local maxBtn = createControlBtn("", 2)
     
-    local homeBtn = createControlBtn("", 0.5)
-    local homeIcon = Instance.new("ImageLabel")
-    homeIcon.Size = UDim2.new(0, 14, 0, 14)
-    homeIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
-    homeIcon.BackgroundTransparency = 1
-    homeIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
-    homeIcon.Image = "rbxassetid://9505470550" -- Home Icon
-    homeIcon.ScaleType = Enum.ScaleType.Fit
-    homeIcon.ZIndex = 6
-    homeIcon.Parent = homeBtn
+    local homeBtn = createControlBtn("🏠", 0.5)
 
     homeBtn.MouseButton1Click:Connect(function()
         if _G.RoseHub_ShowHub then 
@@ -3696,29 +3687,19 @@ function RoseUI:CreateWindow(options)
             searchBox.ZIndex = currentZ + 1
             searchBox.Parent = searchFrame
             
-            -- Gallery Scroll Container
+            -- Gallery Scroll Container (Changed to Frame to prevent Roblox Double-ScrollingFrame input-swallowing)
             local galleryBg = Instance.new("Frame")
-            galleryBg.Size = UDim2.new(1, -10, 0, 320)
+            galleryBg.Size = UDim2.new(1, -10, 0, 0)
             galleryBg.BackgroundColor3 = Color3.fromRGB(20, 10, 15)
+            galleryBg.BackgroundTransparency = 1 -- Make background transparent to just act as a wrapper
             galleryBg.ZIndex = currentZ
             galleryBg.Parent = page
-            Instance.new("UICorner", galleryBg).CornerRadius = UDim.new(0, 6)
-            
-            local galleryScroll = Instance.new("ScrollingFrame")
-            galleryScroll.Size = UDim2.new(1, -16, 1, -16)
-            galleryScroll.Position = UDim2.new(0, 8, 0, 8)
-            galleryScroll.BackgroundTransparency = 1
-            galleryScroll.BorderSizePixel = 0
-            galleryScroll.ScrollBarThickness = 3
-            galleryScroll.ScrollBarImageColor3 = HEADER_COLOR
-            galleryScroll.ZIndex = currentZ + 1
-            galleryScroll.Parent = galleryBg
             
             local gridLayout = Instance.new("UIGridLayout")
             gridLayout.CellSize = UDim2.new(0.5, -5, 0, 160)
             gridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
             gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            gridLayout.Parent = galleryScroll
+            gridLayout.Parent = galleryBg
             
             local cards = {}
             
@@ -3727,7 +3708,7 @@ function RoseUI:CreateWindow(options)
                 card.BackgroundColor3 = CARD_COLOR
                 card.AutoButtonColor = false
                 card.ZIndex = currentZ + 2
-                card.Parent = galleryScroll
+                card.Parent = galleryBg
                 Instance.new("UICorner", card).CornerRadius = UDim.new(0, 6)
                 
                 -- Image Thumbnail
@@ -3837,7 +3818,7 @@ function RoseUI:CreateWindow(options)
             end
             
             gridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                galleryScroll.CanvasSize = UDim2.new(0, 0, 0, gridLayout.AbsoluteContentSize.Y)
+                galleryBg.Size = UDim2.new(1, -10, 0, gridLayout.AbsoluteContentSize.Y)
             end)
             
             searchBox:GetPropertyChangedSignal("Text"):Connect(function()
