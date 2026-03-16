@@ -4092,6 +4092,15 @@ function RoseUI:CreateWindow(options)
         local pName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Guest"
         RoseUI:Notify({Title = "🌹 Welcome, " .. pName .. "!", Text = "Successfully loaded " .. titleText .. ". Enjoy!", Duration = 5})
     end)
+    
+    -- AUTOMATIC AUTOLOADER:
+    -- Wait 2 seconds for the user's script to finish building all their Tabs and Elements, then inject the saved configs natively.
+    task.spawn(function()
+        task.wait(2)
+        pcall(function()
+            if RoseUI.Init then RoseUI:Init() end
+        end)
+    end)
 
     return WindowObj
 end
@@ -4229,8 +4238,7 @@ end
     })
 
     # 9. Initialization
-    -- MUST CALL THIS at the end of your script to process auto-loads and configs.
-    RoseUI:Init()
+    -- You do NOT need to call anything at the end. RoseUI automatically loads your saved configs!
 ]]
 
 return RoseUI
