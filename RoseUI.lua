@@ -3855,57 +3855,6 @@ function RoseUI:CreateWindow(options)
         return TabObj
     end
     
-    -- ========================================================
-    -- MASTER HUB GENERATOR EXTENSION
-    -- ========================================================
-    function RoseUI:CreateMasterHub(gamesTable)
-        _G.RoseHub_ShowHub = function()
-            local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-            local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
-            if getGui then getGui.Enabled = false end
-            local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
-            if getHub then getHub.Enabled = true end
-        end
-        
-        local function SafeLaunch(placeName, funcObj)
-            local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-            local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
-            if getGui then
-                getGui.Enabled = true
-            else
-                _G.Rose_SecureTicket = "ROSEHUB_" .. tostring(math.random(10000000, 99999999))
-                task.spawn(function()
-                    local s, e = pcall(funcObj)
-                    if not s then warn("[RoseHub] Load Error: " .. tostring(e)) end
-                end)
-            end
-            task.delay(0.2, function()
-                local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
-                if getHub then getHub.Enabled = false end
-            end)
-        end
-        
-        local HubWin = RoseUI:CreateWindow({
-            Name = "Rose Hub | Game Selector",
-            HubType = "RoseUI",
-            WindowName = "RoseUI_HubWindow"
-        })
-        
-        local GalleryTab = HubWin:MakeTab({Name = "Game Gallery"})
-        
-        -- Map SafeLaunch closures to the gamesTable
-        for _, g in ipairs(gamesTable) do
-            local originalCb = g.Callback
-            g.Callback = function() SafeLaunch(g.Name, originalCb) end
-        end
-        
-        GalleryTab:AddGameGallery({
-            Name = "Explore Games",
-            Items = gamesTable
-        })
-    end
-
-    
     function WindowObj:CreateConfigManager(tab)
         local cfgSection = tab:AddSection("📁 Configuration Manager")
         
@@ -4510,5 +4459,59 @@ end
     # 9. Initialization
     -- You do NOT need to call anything at the end. RoseUI automatically loads your saved configs!
 ]]
+
+-- ========================================================
+-- MASTER HUB GENERATOR EXTENSION (NATIVE GALLERY)
+-- ========================================================
+function RoseUI:CreateMasterHub(gamesTable)
+    _G.RoseHub_ShowHub = function()
+        pcall(function()
+            local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
+            if getGui then getGui.Enabled = false end
+            local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
+            if getHub then getHub.Enabled = true end
+        end)
+    end
+    
+    local function SafeLaunch(placeName, funcObj)
+        local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+        local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
+        if getGui then
+            getGui.Enabled = true
+        else
+            _G.Rose_SecureTicket = "ROSEHUB_" .. tostring(math.random(10000000, 99999999))
+            task.spawn(function()
+                local s, e = pcall(funcObj)
+                if not s then warn("[RoseHub] Load Error: " .. tostring(e)) end
+            end)
+        end
+        task.delay(0.2, function()
+            pcall(function()
+                local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
+                if getHub then getHub.Enabled = false end
+            end)
+        end)
+    end
+    
+    local HubWin = RoseUI:CreateWindow({
+        Name = "Rose Hub | Game Selector",
+        HubType = "RoseUI",
+        WindowName = "RoseUI_HubWindow"
+    })
+    
+    local GalleryTab = HubWin:MakeTab({Name = "Game Gallery"})
+    
+    -- Map SafeLaunch closures to the gamesTable
+    for _, g in ipairs(gamesTable) do
+        local originalCb = g.Callback
+        g.Callback = function() SafeLaunch(g.Name, originalCb) end
+    end
+    
+    GalleryTab:AddGameGallery({
+        Name = "Explore Games",
+        Items = gamesTable
+    })
+end
 
 return RoseUI
