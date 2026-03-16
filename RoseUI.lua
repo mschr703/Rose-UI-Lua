@@ -16,24 +16,7 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
 -- ========================================================
--- 🛡️ ROBUST ANTI-AFK (Build into RoseUI Core)
--- ========================================================
-task.spawn(function()
-    pcall(function()
-        if getconnections then
-            for _, conn in ipairs(getconnections(game:GetService("Players").LocalPlayer.Idled)) do
-                conn:Disable()
-            end
-        end
-    end)
-    pcall(function()
-        local VirtualUser = game:GetService("VirtualUser")
-        game:GetService("Players").LocalPlayer.Idled:Connect(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end)
-    end)
-end)
+-- 🛡️ ANTI-AFK has been moved exclusively to the Settings Tab UI.
 -- ========================================================
 
 local RoseUI_Themes = {
@@ -3774,95 +3757,32 @@ function RoseUI:CreateWindow(options)
         end
     })
     
+    local vuService = game:GetService("VirtualUser")
     local InitialAntiAfkConn = nil
-    local AfkThread = nil
-    local AfkInputConn = nil
-    local AfkActive = false
 
     SettingsTab:AddToggle({
-        Name = "🛡️ Rose Anti-AFK (Secure & Physical)",
-        Description = "Bypasses idle kick natively, plus physical fallback (W/S) every 19 mins if idle.",
+        Name = "🛡️ Rose Anti-AFK (VirtualUser)",
+        Description = "Bypasses the 20-minute idle kick natively (Evxn Method).",
         Default = true,
+        Save = true,
+        Flag = "RoseSettings_AntiAfk",
         Callback = function(state)
-            AfkActive = state
-            
-            local function enableAntiAfk()
-                -- 1. Native Idled Bypass
-                local gc = getconnections or get_signal_cons
-                if gc then
-                    for _, conn in ipairs(gc(game.Players.LocalPlayer.Idled)) do
-                        pcall(function() if conn.Disable then conn:Disable() end end)
-                    end
-                end
-                
+            if state then
                 if not InitialAntiAfkConn then
-                    local vu = game:GetService("VirtualUser")
-                    InitialAntiAfkConn = game.Players.LocalPlayer.Idled:Connect(function()
+                    InitialAntiAfkConn = game:GetService("Players").LocalPlayer.Idled:Connect(function()
                         pcall(function()
-                            vu:CaptureController()
-                            vu:ClickButton2(Vector2.new())
+                            vuService:CaptureController()
+                            vuService:ClickButton2(Vector2.new())
                         end)
                     end)
+                    RoseUI:Notify({Title = "Anti-AFK", Text = "Anti-Afk Auto Enabled", Duration = 3})
                 end
-
-                -- 2. Physical W/S Fallback Loop
-                if not AfkThread then
-                    local vim = game:GetService("VirtualInputManager")
-                    local uis = game:GetService("UserInputService")
-                    local lastMoveTick = tick()
-                    
-                    AfkInputConn = uis.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType == Enum.UserInputType.MouseMovement then
-                            lastMoveTick = tick()
-                        end
-                    end)
-
-                    AfkThread = task.spawn(function()
-                        local toggleW = true
-                        while AfkActive do
-                            task.wait(5)
-                            -- 1140 seconds = 19 minutes
-                            if tick() - lastMoveTick >= 1140 then
-                                local key = toggleW and Enum.KeyCode.W or Enum.KeyCode.S
-                                toggleW = not toggleW
-                                
-                                pcall(function()
-                                    if vim then
-                                        vim:SendKeyEvent(true, key, false, game)
-                                        task.wait(0.5)
-                                        vim:SendKeyEvent(false, key, false, game)
-                                    end
-                                end)
-                                
-                                lastMoveTick = tick()
-                            end
-                        end
-                    end)
-                end
-            end
-            
-            local function disableAntiAfk()
-                local gc = getconnections or get_signal_cons
-                if gc then
-                    for _, conn in ipairs(gc(game.Players.LocalPlayer.Idled)) do
-                        pcall(function() if conn.Enable then conn:Enable() end end)
-                    end
-                end
+            else
                 if InitialAntiAfkConn then
                     InitialAntiAfkConn:Disconnect()
                     InitialAntiAfkConn = nil
+                    RoseUI:Notify({Title = "Anti-AFK", Text = "Anti-Afk Disabled", Duration = 3})
                 end
-                if AfkInputConn then
-                    AfkInputConn:Disconnect()
-                    AfkInputConn = nil
-                end
-                AfkThread = nil
-            end
-
-            if state then
-                enableAntiAfk()
-            else
-                disableAntiAfk()
             end
         end
     })
