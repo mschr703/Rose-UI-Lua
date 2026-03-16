@@ -340,9 +340,15 @@ function RoseUI:CreateWindow(options)
     dof.Parent = game:GetService("Lighting")
     
     local blurConn = game:GetService("RunService").RenderStepped:Connect(function()
-        if not dragFrame or not dragFrame.Parent or not screenGui.Enabled then
-            blurPart.CFrame = CFrame.new(0, 9999, 0)
+        if not dragFrame or not dragFrame.Parent then
+            pcall(function() blurPart:Destroy() end)
             return
+        end
+        if not screenGui.Enabled then
+            blurPart.Transparency = 1
+            return
+        else
+            blurPart.Transparency = 0.995
         end
         -- Inset the blur slightly to avoid bleeding past the rounded corners
         local insetX = 6
@@ -518,7 +524,16 @@ function RoseUI:CreateWindow(options)
     local minBtn = createControlBtn("-", 1)
     local maxBtn = createControlBtn("", 2)
     
-    local homeBtn = createControlBtn("🏠", 0.5)
+    local homeBtn = createControlBtn("", 0.5)
+    
+    local homeIcon = Instance.new("ImageLabel")
+    homeIcon.Size = UDim2.new(0, 14, 0, 14)
+    homeIcon.Position = UDim2.new(0.5, -7, 0.5, -7)
+    homeIcon.BackgroundTransparency = 1
+    homeIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
+    homeIcon.ScaleType = Enum.ScaleType.Fit
+    homeIcon.ZIndex = 6
+    homeIcon.Parent = homeBtn
 
     homeBtn.MouseButton1Click:Connect(function()
         if _G.RoseHub_ShowHub then 
@@ -573,6 +588,14 @@ function RoseUI:CreateWindow(options)
                     if s and d then writefile(taboutPath, d) end
                 end
                 if isfile and isfile(taboutPath) then maxIcon.Image = getasset(taboutPath) end
+                
+                -- Load Home icon
+                local homePath = "RoseHub/assets/home_white.png"
+                if isfile and not isfile(homePath) and writefile then
+                    local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/white/home.png") end)
+                    if s and d then writefile(homePath, d) end
+                end
+                if isfile and isfile(homePath) then homeIcon.Image = getasset(homePath) end
                 
                 -- Load Cross icon
                 local crossPath = "RoseHub/assets/cross_white.png"
@@ -4457,9 +4480,16 @@ function RoseUI:CreateMasterHub(gamesTable)
         end)
     end
     
-    local function SafeLaunch(placeName, funcObj)
+        local function SafeLaunch(placeName, funcObj)
         local cl = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
         local getGui = game:GetService("CoreGui"):FindFirstChild("RoseUI_Window") or cl:FindFirstChild("RoseUI_Window")
+        
+        -- Hide the hub IMMEDIATELY, don't stall with an animation or outline ghosting
+        pcall(function()
+            local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
+            if getHub then getHub.Enabled = false end
+        end)
+        
         if getGui then
             getGui.Enabled = true
         else
@@ -4469,12 +4499,6 @@ function RoseUI:CreateMasterHub(gamesTable)
                 if not s then warn("[RoseHub] Load Error: " .. tostring(e)) end
             end)
         end
-        task.delay(0.2, function()
-            pcall(function()
-                local getHub = game:GetService("CoreGui"):FindFirstChild("RoseUI_HubWindow") or cl:FindFirstChild("RoseUI_HubWindow")
-                if getHub then getHub.Enabled = false end
-            end)
-        end)
     end
     
     local HubWin = RoseUI:CreateWindow({
