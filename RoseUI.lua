@@ -4233,27 +4233,39 @@ function RoseUI:CreateWindow(options)
     local introBg = Instance.new("Frame")
     introBg.Size = UDim2.new(1, 0, 1, 0)
     introBg.BackgroundColor3 = Color3.fromRGB(12, 8, 12)
+    introBg.BackgroundTransparency = 1 -- User requested NO black screen overlay
     introBg.ZIndex = 999
     introBg.Parent = screenGui
     
     local titleTextAnim = Instance.new("TextLabel")
-    titleTextAnim.Size = UDim2.new(0, 400, 0, 100)
-    titleTextAnim.Position = UDim2.new(0.5, -200, 0.5, -50)
     titleTextAnim.BackgroundTransparency = 1
+    titleTextAnim.Text = titleText == "Rose Hub | Game Selector" and "RoseHub" or titleText
+    titleTextAnim.TextColor3 = Color3.fromRGB(220, 10, 30) -- Deep Beautiful Rosa/Red
+    titleTextAnim.TextSize = 90
+    titleTextAnim.Size = UDim2.new(0, 0, 0, 0) -- Let AutomaticSize handle width perfectly
+    titleTextAnim.AutomaticSize = Enum.AutomaticSize.XY
+    titleTextAnim.Position = UDim2.new(0.5, 0, 0.5, 0)
+    titleTextAnim.AnchorPoint = Vector2.new(0.5, 0.5)
+    titleTextAnim.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Attempting to use a cursive-like Font natively in Roblox
-    local hasCursive, cursiveFont = pcall(function() return Font.new("rbxasset://fonts/families/Parisienne.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal) end)
-    if hasCursive and cursiveFont then 
-        titleTextAnim.FontFace = cursiveFont 
-    else 
-        titleTextAnim.Font = Enum.Font.GothamBold 
+    -- Load an elegant "Grandma" cursive font 
+    local fontsToTry = {
+        "rbxasset://fonts/families/GreatVibes.json",
+        "rbxasset://fonts/families/Parisienne.json",
+        "rbxasset://fonts/families/DancingScript.json",
+        "rbxasset://fonts/families/Pacifico.json"
+    }
+    local appliedFont = false
+    for _, fontStr in ipairs(fontsToTry) do
+        local s, f = pcall(function() return Font.new(fontStr, Enum.FontWeight.Regular) end)
+        if s and f then
+            titleTextAnim.FontFace = f
+            appliedFont = true
+            break
+        end
     end
+    if not appliedFont then titleTextAnim.Font = Enum.Font.SourceSansItalic end
     
-    titleTextAnim.Text = titleText
-    if titleText == "Rose Hub | Game Selector" then titleTextAnim.Text = "RoseHub" end
-    
-    titleTextAnim.TextColor3 = Color3.fromRGB(240, 20, 50) -- Deep Red
-    titleTextAnim.TextSize = 75
     titleTextAnim.ZIndex = 1000
     titleTextAnim.Parent = introBg
     
@@ -4269,37 +4281,44 @@ function RoseUI:CreateWindow(options)
     
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 0
-    stroke.Color = Color3.fromRGB(255, 80, 100)
+    stroke.Color = Color3.fromRGB(255, 60, 80)
     stroke.Transparency = 1
     stroke.Parent = titleTextAnim
 
     local penGlow = Instance.new("Frame")
-    penGlow.Size = UDim2.new(0, 15, 0, 15)
-    penGlow.Position = UDim2.new(0, -7.5, 0.5, -7.5) 
-    penGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    penGlow.Size = UDim2.new(0, 8, 0, 8)
+    penGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+    penGlow.Position = UDim2.new(0, 0, 0.5, 0) -- Starts exactly at left edge of the dynamic text width
+    penGlow.BackgroundColor3 = Color3.fromRGB(255, 200, 200)
     penGlow.ZIndex = 1001
     penGlow.Parent = titleTextAnim
     Instance.new("UICorner", penGlow).CornerRadius = UDim.new(1, 0)
     
     local penGlowOuter = Instance.new("Frame")
-    penGlowOuter.Size = UDim2.new(0, 40, 0, 40)
-    penGlowOuter.Position = UDim2.new(0.5, -20, 0.5, -20)
-    penGlowOuter.BackgroundColor3 = Color3.fromRGB(255, 20, 50)
+    penGlowOuter.Size = UDim2.new(0, 25, 0, 25)
+    penGlowOuter.AnchorPoint = Vector2.new(0.5, 0.5)
+    penGlowOuter.Position = UDim2.new(0.5, 0, 0.5, 0)
+    penGlowOuter.BackgroundColor3 = Color3.fromRGB(255, 20, 40)
     penGlowOuter.BackgroundTransparency = 0.5
     penGlowOuter.ZIndex = 1000
     penGlowOuter.Parent = penGlow
     Instance.new("UICorner", penGlowOuter).CornerRadius = UDim.new(1, 0)
 
     task.spawn(function()
-        task.wait(0.3)
+        task.wait(0.2)
         -- Glow pulse
-        local pulseTw = tweenService:Create(penGlowOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 60, 0, 60), BackgroundTransparency = 0.8})
+        local pulseTw = tweenService:Create(penGlowOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 40, 0, 40), BackgroundTransparency = 0.9})
         pulseTw:Play()
         
-        -- Slow smooth writing
-        local twTime = 1.8 
-        local penTw = tweenService:Create(penGlow, TweenInfo.new(twTime, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {Position = UDim2.new(1, -7.5, 0.5, -7.5)})
-        local gradTw = tweenService:Create(grad, TweenInfo.new(twTime, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {Offset = Vector2.new(0.5, 0)})
+        -- Plop in the pen
+        penGlow.Size = UDim2.new(0, 0, 0, 0)
+        tweenService:Create(penGlow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 8, 0, 8)}):Play()
+        task.wait(0.3)
+        
+        -- Slow smooth cursive writing swoop
+        local twTime = 1.4 
+        local penTw = tweenService:Create(penGlow, TweenInfo.new(twTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = UDim2.new(1, 0, 0.5, 0)})
+        local gradTw = tweenService:Create(grad, TweenInfo.new(twTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Offset = Vector2.new(0.5, 0)})
         
         penTw:Play()
         gradTw:Play()
@@ -4307,24 +4326,25 @@ function RoseUI:CreateWindow(options)
         local isPainting = true
         task.spawn(function()
             while isPainting do
-                task.wait(0.04)
+                task.wait(0.03)
                 if not penGlow or not titleTextAnim then break end
                 local spark = Instance.new("Frame")
-                spark.Size = UDim2.new(0, math.random(4, 8), 0, math.random(4, 8))
-                spark.Position = penGlow.Position + UDim2.new(0, math.random(-5, 5), 0, math.random(-15, 15))
-                spark.BackgroundColor3 = Color3.fromRGB(255, math.random(50, 100), math.random(50, 100))
+                spark.Size = UDim2.new(0, math.random(3, 6), 0, math.random(3, 6))
+                spark.AnchorPoint = Vector2.new(0.5, 0.5)
+                spark.Position = penGlow.Position + UDim2.new(0, math.random(-8, 8), 0, math.random(-15, 15))
+                spark.BackgroundColor3 = Color3.fromRGB(255, math.random(100, 150), math.random(100, 150))
                 spark.Rotation = math.random(0, 360)
                 spark.ZIndex = 1002
                 spark.Parent = titleTextAnim
                 Instance.new("UICorner", spark).CornerRadius = UDim.new(1, 0)
                 
-                tweenService:Create(spark, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                tweenService:Create(spark, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, 0, 0, 0), 
-                    Position = spark.Position + UDim2.new(0, math.random(-30, 30), 0, math.random(10, 40)), 
+                    Position = spark.Position + UDim2.new(0, math.random(-25, 25), 0, math.random(10, 40)), 
                     BackgroundTransparency = 1,
                     Rotation = spark.Rotation + math.random(90, 180)
                 }):Play()
-                game.Debris:AddItem(spark, 0.7)
+                game.Debris:AddItem(spark, 0.6)
             end
         end)
         
@@ -4332,17 +4352,18 @@ function RoseUI:CreateWindow(options)
         isPainting = false
         pulseTw:Cancel()
         
-        -- Fancy finish pop
-        tweenService:Create(penGlow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Position = UDim2.new(1, 0, 0.5, 0)}):Play()
-        tweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 3, Transparency = 0}):Play()
+        -- Fancy finish pop (Pen disappears)
+        tweenService:Create(penGlow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)}):Play()
+        tweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 2, Transparency = 0}):Play()
         
-        task.wait(0.3)
-        tweenService:Create(stroke, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Thickness = 0, Transparency = 1}):Play()
-        tweenService:Create(titleTextAnim, TweenInfo.new(0.6), {TextTransparency = 1, Size = UDim2.new(0, 450, 0, 120), Position = UDim2.new(0.5, -225, 0.5, -60)}):Play()
+        -- Smoothly enlarge the text from the AnchorPoint center using TextSize
+        tweenService:Create(titleTextAnim, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextSize = 105}):Play()
         
-        local bgFade = tweenService:Create(introBg, TweenInfo.new(0.5), {BackgroundTransparency = 1})
-        bgFade:Play()
-        bgFade.Completed:Wait()
+        task.wait(0.4)
+        tweenService:Create(stroke, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Thickness = 0, Transparency = 1}):Play()
+        tweenService:Create(titleTextAnim, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {TextTransparency = 1, TextSize = 130}):Play()
+        
+        task.wait(0.6)
         introBg:Destroy()
         
         -- Open main window
