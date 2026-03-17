@@ -4865,7 +4865,7 @@ end
             homeSpacer.Size = UDim2.new(1, 0, 0, 35)
             homeSpacer.BackgroundTransparency = 1
             homeSpacer.LayoutOrder = 1
-            homeSpacer.Parent = HomeTab.Btn.Parent
+            homeSpacer.Parent = tabContainer
             
             local execName = "Unknown Executor"
             pcall(function()
