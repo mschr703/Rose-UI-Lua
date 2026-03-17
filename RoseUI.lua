@@ -1460,6 +1460,61 @@ function RoseUI:CreateWindow(options)
                 bDesc.Parent = bannerCard
             end
             
+            -- Right Banner 2
+            if rowOptions.Banner2 then
+                local bannerCard2 = Instance.new("Frame")
+                bannerCard2.Size = UDim2.new(0.5, -5, 1, 0)
+                bannerCard2.BackgroundColor3 = Color3.fromRGB(30, 15, 25)
+                bannerCard2.ClipsDescendants = true
+                bannerCard2.ZIndex = 11
+                bannerCard2.Parent = rowFrame
+                Instance.new("UICorner", bannerCard2).CornerRadius = UDim.new(0, 6)
+                
+                local bgImage2 = Instance.new("ImageLabel")
+                bgImage2.Size = UDim2.new(1, 0, 1, 0)
+                bgImage2.BackgroundTransparency = 1
+                bgImage2.Image = rowOptions.Banner2.Image or "rbxassetid://10459521360"
+                bgImage2.ImageColor3 = rowOptions.Banner2.ImageColor or Color3.fromRGB(180, 150, 255)
+                bgImage2.ImageTransparency = 0.4
+                bgImage2.ScaleType = Enum.ScaleType.Crop
+                bgImage2.ZIndex = 11
+                bgImage2.Parent = bannerCard2
+                
+                local gradient2 = Instance.new("UIGradient")
+                gradient2.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
+                    ColorSequenceKeypoint.new(1, Color3.new(1,1,1))
+                })
+                gradient2.Rotation = 45
+                gradient2.Parent = bannerCard2
+                
+                local bTitle2 = Instance.new("TextLabel")
+                bTitle2.Size = UDim2.new(1, -20, 0, 20)
+                bTitle2.Position = UDim2.new(0, 15, 0, 25)
+                bTitle2.BackgroundTransparency = 1
+                bTitle2.Text = rowOptions.Banner2.Title or "Title"
+                bTitle2.TextColor3 = Color3.new(1,1,1)
+                bTitle2.Font = Enum.Font.GothamBold
+                bTitle2.TextSize = 16
+                bTitle2.TextXAlignment = Enum.TextXAlignment.Left
+                bTitle2.ZIndex = 12
+                bTitle2.Parent = bannerCard2
+                
+                local bDesc2 = Instance.new("TextLabel")
+                bDesc2.Size = UDim2.new(1, -20, 0, 30)
+                bDesc2.Position = UDim2.new(0, 15, 0, 45)
+                bDesc2.BackgroundTransparency = 1
+                bDesc2.Text = rowOptions.Banner2.Desc or "Description"
+                bDesc2.TextColor3 = Color3.fromRGB(200, 180, 220)
+                bDesc2.Font = Enum.Font.Gotham
+                bDesc2.TextSize = 12
+                bDesc2.TextWrapped = true
+                bDesc2.TextYAlignment = Enum.TextYAlignment.Top
+                bDesc2.TextXAlignment = Enum.TextXAlignment.Left
+                bDesc2.ZIndex = 12
+                bDesc2.Parent = bannerCard2
+            end
+            
             -- Right Ring Card
             if rowOptions.Ring then
                 local ringCard = Instance.new("Frame")
