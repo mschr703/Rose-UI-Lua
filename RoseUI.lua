@@ -5139,8 +5139,35 @@ end
             end)
             
             local dayOfWeek = os.date("%A")
-            local userRole = "Free User" -- Placeholder, could be integrated with your own auth
+            local userRole = "Free User"
+            pcall(function()
+                if type(LRM_UserNote) == "string" and LRM_UserNote ~= "" and LRM_UserNote ~= "Ad Reward" then
+                    userRole = LRM_UserNote
+                elseif type(LRM_IsUserPremium) == "boolean" and LRM_IsUserPremium == true then
+                    userRole = "Premium User"
+                end
+            end)
             
+            -- Update the Sidebar Rank Label (Lower Left Profile)
+            pcall(function()
+                if sidebarElements and sidebarElements.labels and sidebarElements.labels[2] then
+                    sidebarElements.labels[2].Text = userRole
+                end
+            end)
+            
+            local totalExecs = "0"
+            pcall(function()
+                if type(LRM_TotalExecutions) == "number" then
+                    totalExecs = tostring(LRM_TotalExecutions)
+                end
+            end)
+            
+            local scriptVer = "Developer Build"
+            pcall(function()
+                if type(LRM_ScriptVersion) == "string" and LRM_ScriptVersion ~= "" then
+                    scriptVer = LRM_ScriptVersion
+                end
+            end)
             local keyTimeStr = "Lifetime"
             pcall(function()
                 if type(LRM_SecondsLeft) == "number" then
@@ -5181,9 +5208,18 @@ end
             HomeTab:AddDashboardRow({
                 Banner = {
                     Title = "Welcome, " .. pName,
-                    Desc = "Role: " .. userRole .. "\nKey Time: " .. keyTimeStr,
+                    Desc = "Role: " .. userRole .. "\nKey Time: " .. keyTimeStr .. "\nExecutions: " .. totalExecs,
                     Image = "rbxassetid://10459521360" -- Cool fluid purple texture
                 },
+                Banner2 = {
+                    Title = "RoseHub",
+                    Desc = "Version: " .. scriptVer .. "\nStatus: Undetected\nDeveloper: ms",
+                    Image = "rbxassetid://10459521360", -- Cool fluid purple texture
+                    ImageColor = Color3.fromRGB(50, 20, 70) -- Slightly darker/different tint
+                }
+            })
+            
+            HomeTab:AddDashboardRow({
                 Ring = {
                     Title = "Executor:",
                     Desc = execName,
