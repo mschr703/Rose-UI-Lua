@@ -856,9 +856,17 @@ function RoseUI:CreateWindow(options)
     local profileFrame = Instance.new("Frame")
     profileFrame.Size = UDim2.new(1, -10, 0, 50)
     profileFrame.Position = UDim2.new(0, 5, 1, -65)
-    profileFrame.BackgroundTransparency = 1 
+    profileFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 35)
+    profileFrame.BackgroundTransparency = 0.5 
     profileFrame.ZIndex = 3
     profileFrame.Parent = sidebarFrame
+    Instance.new("UICorner", profileFrame).CornerRadius = UDim.new(0, 8)
+
+    local profileStroke = Instance.new("UIStroke")
+    profileStroke.Color = HEADER_COLOR
+    profileStroke.Transparency = 0.7
+    profileStroke.Thickness = 1
+    profileStroke.Parent = profileFrame
 
     local localPlayer = game:GetService("Players").LocalPlayer
     local pName = localPlayer and localPlayer.Name or "Guest"
@@ -1068,24 +1076,19 @@ function RoseUI:CreateWindow(options)
         
         local tabBtn = Instance.new("TextButton")
         tabBtn.Size = UDim2.new(1, 0, 0, 35)
-        tabBtn.BackgroundColor3 = HEADER_COLOR
-        tabBtn.BackgroundTransparency = 1 
+        tabBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 45)
+        tabBtn.BackgroundTransparency = 0.85 
         tabBtn.Text = ""
         tabBtn.LayoutOrder = tabOptions.LayoutOrder or (#WindowObj.Tabs + 1)
         tabBtn.ZIndex = 4
         tabBtn.Parent = tabContainer
         Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
         
-        if (#WindowObj.Tabs > 1 or forceSeparator) and not noSeparator then
-            local sepLine = Instance.new("Frame")
-            sepLine.Size = UDim2.new(1, -20, 0, 1)
-            sepLine.Position = UDim2.new(0, 10, 0, -6) -- Centered perfectly in the 12px gap
-            sepLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            sepLine.BackgroundTransparency = 0.95
-            sepLine.BorderSizePixel = 0
-            sepLine.ZIndex = 4
-            sepLine.Parent = tabBtn
-        end
+        local btnStroke = Instance.new("UIStroke")
+        btnStroke.Color = HEADER_COLOR
+        btnStroke.Transparency = 0.8
+        btnStroke.Thickness = 1
+        btnStroke.Parent = tabBtn
         
         local tabIconImg = Instance.new("ImageLabel")
         tabIconImg.Size = UDim2.new(0, 16, 0, 16)
@@ -1218,13 +1221,16 @@ function RoseUI:CreateWindow(options)
             -- Premium Tab Button Animations (Exponential Smooth)
             local tabTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
             for _, t in pairs(WindowObj.Tabs) do
+                local tStroke = t.Btn:FindFirstChildOfClass("UIStroke")
                 if t.Page == page then
                     tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 0.1}):Play()
+                    if tStroke then tweenService:Create(tStroke, tabTweenInfo, {Transparency = 0.2}):Play() end
                     tweenService:Create(t.Lbl, tabTweenInfo, {TextColor3 = TEXT_COLOR}):Play()
                     tweenService:Create(t.Img, tabTweenInfo, {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                     if t.TxtIcon then tweenService:Create(t.TxtIcon, tabTweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play() end
                 else
-                    tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 1}):Play()
+                    tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 0.85}):Play()
+                    if tStroke then tweenService:Create(tStroke, tabTweenInfo, {Transparency = 0.8}):Play() end
                     tweenService:Create(t.Lbl, tabTweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 140)}):Play()
                     tweenService:Create(t.Img, tabTweenInfo, {ImageColor3 = Color3.fromRGB(140, 140, 140)}):Play()
                     if t.TxtIcon then tweenService:Create(t.TxtIcon, tabTweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 140)}):Play() end
@@ -1256,6 +1262,8 @@ function RoseUI:CreateWindow(options)
             page.Visible = true
             page.Position = UDim2.new(0, 10, 0, 10)
             tabBtn.BackgroundTransparency = 0.1
+            local bStroke = tabBtn:FindFirstChildOfClass("UIStroke")
+            if bStroke then bStroke.Transparency = 0.2 end
             tabLabel.TextColor3 = TEXT_COLOR
             tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
             tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -5085,20 +5093,10 @@ end
             local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png", LayoutOrder = -1})
             
             local homeSpacer = Instance.new("Frame")
-            homeSpacer.Size = UDim2.new(1, 0, 0, 35)
+            homeSpacer.Size = UDim2.new(1, 0, 0, 4) -- Small gap
             homeSpacer.BackgroundTransparency = 1
-            homeSpacer.LayoutOrder = 0
+            homeSpacer.LayoutOrder = 0 -- Ensures it stays directly under HomeTab
             homeSpacer.Parent = tabContainer
-            
-            local homeLine = Instance.new("Frame")
-            homeLine.Size = UDim2.new(1, -20, 0, 1)
-            -- Mathematically exactly 48 absolute Y to match the top line of the right side page tabs! (15 TabContainer + 33 = 48)
-            homeLine.Position = UDim2.new(0, 10, 0, 33) 
-            homeLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            homeLine.BackgroundTransparency = 0.85
-            homeLine.BorderSizePixel = 0
-            homeLine.ZIndex = 4
-            homeLine.Parent = HomeTab.Btn
             
             local execName = "Unknown Executor"
             pcall(function()
@@ -5112,7 +5110,7 @@ end
             end)
             
             local dayOfWeek = os.date("%A")
-            local userRole = "Premium Role" -- Placeholder, could be integrated with your own auth
+            local userRole = "Free User" -- Placeholder, could be integrated with your own auth
             
             local eNameLower = string.lower(execName)
             local score = 3
