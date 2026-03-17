@@ -1349,6 +1349,7 @@ function RoseUI:CreateWindow(options)
             proxyMethod("AddInventoryGrid")
             proxyMethod("AddPlotGrid")
             proxyMethod("AddDashboardRow")
+            proxyMethod("AddDashboardFullCard")
             
             return SectionAPI
         end
@@ -1444,7 +1445,7 @@ function RoseUI:CreateWindow(options)
                 Instance.new("UICorner", ringBg).CornerRadius = UDim.new(1, 0)
                 
                 local ringStroke = Instance.new("UIStroke")
-                ringStroke.Color = Color3.fromRGB(150, 100, 200)
+                ringStroke.Color = rowOptions.Ring.Color or Color3.fromRGB(150, 100, 200)
                 ringStroke.Thickness = 5
                 ringStroke.Transparency = 0.5
                 ringStroke.Parent = ringBg
@@ -1454,7 +1455,7 @@ function RoseUI:CreateWindow(options)
                 ringNum.Position = UDim2.new(0, 0, 0.5, -15)
                 ringNum.BackgroundTransparency = 1
                 ringNum.Text = tostring(rowOptions.Ring.Number or "0")
-                ringNum.TextColor3 = Color3.fromRGB(200, 180, 255)
+                ringNum.TextColor3 = rowOptions.Ring.Color or Color3.fromRGB(200, 180, 255)
                 ringNum.Font = Enum.Font.GothamBold
                 ringNum.TextSize = 18
                 ringNum.ZIndex = 13
@@ -1472,29 +1473,98 @@ function RoseUI:CreateWindow(options)
                 ringLbl.Parent = ringContainer
                 
                 local rTitle = Instance.new("TextLabel")
-                rTitle.Size = UDim2.new(1, -85, 0, 20)
-                rTitle.Position = UDim2.new(0, 80, 0, 25)
+                rTitle.Size = UDim2.new(1, -85, 0, 16)
+                rTitle.Position = UDim2.new(0, 80, 0, 10)
                 rTitle.BackgroundTransparency = 1
                 rTitle.Text = rowOptions.Ring.Title or "Title"
                 rTitle.TextColor3 = Color3.new(1,1,1)
                 rTitle.Font = Enum.Font.GothamBold
-                rTitle.TextSize = 14
+                rTitle.TextSize = 15
                 rTitle.TextXAlignment = Enum.TextXAlignment.Left
                 rTitle.ZIndex = 12
                 rTitle.Parent = ringCard
                 
                 local rDesc = Instance.new("TextLabel")
-                rDesc.Size = UDim2.new(1, -85, 0, 15)
-                rDesc.Position = UDim2.new(0, 80, 0, 45)
+                rDesc.Size = UDim2.new(1, -85, 0, 14)
+                rDesc.Position = UDim2.new(0, 80, 0, 28)
                 rDesc.BackgroundTransparency = 1
                 rDesc.Text = rowOptions.Ring.Desc or "Description"
-                rDesc.TextColor3 = Color3.fromRGB(160, 140, 150)
-                rDesc.Font = Enum.Font.Gotham
-                rDesc.TextSize = 11
+                rDesc.TextColor3 = Color3.fromRGB(230, 230, 230)
+                rDesc.Font = Enum.Font.GothamBold
+                rDesc.TextSize = 12
                 rDesc.TextXAlignment = Enum.TextXAlignment.Left
                 rDesc.ZIndex = 12
                 rDesc.Parent = ringCard
+
+                local rSub = Instance.new("TextLabel")
+                rSub.Size = UDim2.new(1, -85, 0, 30)
+                rSub.Position = UDim2.new(0, 80, 0, 44)
+                rSub.BackgroundTransparency = 1
+                rSub.Text = rowOptions.Ring.Message or ""
+                rSub.TextColor3 = rowOptions.Ring.MessageColor or Color3.fromRGB(160, 140, 150)
+                rSub.Font = Enum.Font.Gotham
+                rSub.TextSize = 10
+                rSub.TextWrapped = true
+                rSub.TextYAlignment = Enum.TextYAlignment.Top
+                rSub.TextXAlignment = Enum.TextXAlignment.Left
+                rSub.ZIndex = 12
+                rSub.Parent = ringCard
             end
+        end
+        
+        -- 0.6 DASHBOARD FULL CARD
+        function TabObj:AddDashboardFullCard(cardOptions)
+            local cardFrame = Instance.new("Frame")
+            cardFrame.Size = UDim2.new(1, -10, 0, 80)
+            cardFrame.BackgroundColor3 = Color3.fromRGB(30, 25, 35)
+            cardFrame.ClipsDescendants = true
+            cardFrame.ZIndex = 11
+            cardFrame.Parent = page
+            Instance.new("UICorner", cardFrame).CornerRadius = UDim.new(0, 6)
+            
+            local bgImage = Instance.new("ImageLabel")
+            bgImage.Size = UDim2.new(1, 0, 1, 0)
+            bgImage.BackgroundTransparency = 1
+            bgImage.Image = cardOptions.Image or "rbxassetid://10459521360"
+            bgImage.ImageColor3 = Color3.fromRGB(80, 150, 255)
+            bgImage.ImageTransparency = 0.6
+            bgImage.ScaleType = Enum.ScaleType.Crop
+            bgImage.ZIndex = 11
+            bgImage.Parent = cardFrame
+            
+            local gradient = Instance.new("UIGradient")
+            gradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
+                ColorSequenceKeypoint.new(1, Color3.new(1,1,1))
+            })
+            gradient.Rotation = -45
+            gradient.Parent = cardFrame
+
+            local cTitle = Instance.new("TextLabel")
+            cTitle.Size = UDim2.new(1, -30, 0, 20)
+            cTitle.Position = UDim2.new(0, 15, 0, 15)
+            cTitle.BackgroundTransparency = 1
+            cTitle.Text = cardOptions.Title or "Server Info"
+            cTitle.TextColor3 = Color3.new(1,1,1)
+            cTitle.Font = Enum.Font.GothamBold
+            cTitle.TextSize = 16
+            cTitle.TextXAlignment = Enum.TextXAlignment.Left
+            cTitle.ZIndex = 12
+            cTitle.Parent = cardFrame
+            
+            local cDesc = Instance.new("TextLabel")
+            cDesc.Size = UDim2.new(1, -30, 0, 30)
+            cDesc.Position = UDim2.new(0, 15, 0, 35)
+            cDesc.BackgroundTransparency = 1
+            cDesc.Text = cardOptions.Desc or "Loading server data..."
+            cDesc.TextColor3 = Color3.fromRGB(200, 220, 255)
+            cDesc.Font = Enum.Font.Gotham
+            cDesc.TextSize = 12
+            cDesc.TextWrapped = true
+            cDesc.TextXAlignment = Enum.TextXAlignment.Left
+            cDesc.TextYAlignment = Enum.TextYAlignment.Top
+            cDesc.ZIndex = 12
+            cDesc.Parent = cardFrame
         end
         
         -- 1. BUTTON
@@ -5027,30 +5097,70 @@ end
                     execName = identifyexecutor()
                 end
             end)
-            
             local pName = "Guest"
             pcall(function()
                 pName = game:GetService("Players").LocalPlayer.Name
             end)
             
             local dayOfWeek = os.date("%A")
+            local userRole = "Premium Role" -- Placeholder, could be integrated with your own auth
             
-            HomeTab:AddLabel("👋 Greetings, " .. pName .. "!")
+            local eNameLower = string.lower(execName)
+            local score = 3
+            if string.find(eNameLower, "volt") then score = 10 
+            elseif string.find(eNameLower, "potassium") then score = 9
+            elseif string.find(eNameLower, "delta") then score = 8
+            elseif string.find(eNameLower, "codex") then score = 8
+            elseif string.find(eNameLower, "arceus") then score = 8
+            elseif string.find(eNameLower, "wave") then score = 6
+            elseif string.find(eNameLower, "solara") then score = 5
+            elseif string.find(eNameLower, "awp") then score = 5
+            elseif string.find(eNameLower, "xeno") then score = 5
+            elseif string.find(eNameLower, "nezur") then score = 4
+            end
+
+            local rColor, rMsg
+            if score >= 8 then
+                rColor = Color3.fromRGB(80, 220, 100)
+                rMsg = "You will have no problems with this executor."
+            elseif score >= 5 then
+                rColor = Color3.fromRGB(255, 170, 50)
+                rMsg = "You may experience minor problems using our scripts with this executor."
+            else
+                rColor = Color3.fromRGB(240, 60, 60)
+                rMsg = "You may experience problems using our scripts with this executor."
+            end
+            
             HomeTab:AddDashboardRow({
                 Banner = {
-                    Title = "Welcome Back",
-                    Desc = "Have a great " .. dayOfWeek .. "!",
+                    Title = "Welcome, " .. pName,
+                    Desc = "Role: " .. userRole,
                     Image = "rbxassetid://10459521360" -- Cool fluid purple texture
                 },
                 Ring = {
-                    Title = "Executor",
-                    Desc = "Currently Injected",
-                    Number = "1",
-                    Label = "ACTIVE"
+                    Title = "Executor:",
+                    Desc = execName,
+                    Number = tostring(score),
+                    Label = "SCORE",
+                    Color = rColor,
+                    Message = rMsg,
+                    MessageColor = rColor
                 }
             })
             
-            HomeTab:AddLabel("Executor Detected: " .. execName)
+            -- Full Width Card for Server Info
+            local playerCount = 0
+            local maxPlayers = 0
+            pcall(function()
+                playerCount = #game:GetService("Players"):GetPlayers()
+                maxPlayers = game:GetService("Players").MaxPlayers
+            end)
+            
+            HomeTab:AddDashboardFullCard({
+                Title = "Server Information",
+                Desc = "Place ID: " .. tostring(game.PlaceId) .. "\nPlayers: " .. tostring(playerCount) .. " / " .. tostring(maxPlayers) .. "\nJob ID: " .. tostring(game.JobId),
+                Image = "rbxassetid://10111160350" -- Alternate sleek fluid/tech background
+            })
         end)
         if not success then
             warn("[RoseUI] HomeTab Creation Error: " .. tostring(err))
