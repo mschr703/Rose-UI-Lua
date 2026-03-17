@@ -4189,10 +4189,104 @@ function RoseUI:CreateWindow(options)
                 end)
                 
                 card.MouseButton1Click:Connect(function()
-                    if itemData.Callback then
-                        RoseUI:Notify({Title = "🚀 Launching", Text = "Loading " .. tostring(itemData.Name) .. "...", Duration = 2})
-                        itemData.Callback()
+                    local sGui = card:FindFirstAncestorOfClass("ScreenGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+                    
+                    local ctxBg = Instance.new("TextButton")
+                    ctxBg.Size = UDim2.new(1, 0, 1, 0)
+                    ctxBg.BackgroundTransparency = 1
+                    ctxBg.Text = ""
+                    ctxBg.ZIndex = 100
+                    ctxBg.Parent = sGui
+                    
+                    local ctxMenu = Instance.new("Frame")
+                    local mouse = UserInputService:GetMouseLocation()
+                    ctxMenu.Position = UDim2.new(0, mouse.X + 10, 0, mouse.Y - 25)
+                    ctxMenu.BackgroundColor3 = CARD_COLOR
+                    ctxMenu.ZIndex = 101
+                    ctxMenu.ClipsDescendants = true
+                    ctxMenu.Parent = ctxBg
+                    Instance.new("UICorner", ctxMenu).CornerRadius = UDim.new(0, 6)
+                    
+                    local ctxStroke = Instance.new("UIStroke")
+                    ctxStroke.Color = HEADER_COLOR
+                    ctxStroke.Thickness = 1
+                    ctxStroke.Transparency = 0.5
+                    ctxStroke.Parent = ctxMenu
+                    
+                    local ctxList = Instance.new("UIListLayout")
+                    ctxList.SortOrder = Enum.SortOrder.LayoutOrder
+                    ctxList.Parent = ctxMenu
+                    
+                    -- Title
+                    local titleLbl = Instance.new("TextLabel")
+                    titleLbl.Size = UDim2.new(1, 0, 0, 30)
+                    titleLbl.BackgroundTransparency = 1
+                    titleLbl.Text = "  " .. (itemData.Name or "Game") .. " Options"
+                    titleLbl.TextColor3 = HEADER_COLOR
+                    titleLbl.Font = Enum.Font.GothamBold
+                    titleLbl.TextSize = 12
+                    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+                    titleLbl.ZIndex = 102
+                    titleLbl.Parent = ctxMenu
+                    
+                    -- Execute Btn
+                    local execBtn = Instance.new("TextButton")
+                    execBtn.Size = UDim2.new(1, 0, 0, 30)
+                    execBtn.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+                    execBtn.BackgroundTransparency = 0.5
+                    execBtn.Text = "  ▶ Execute Script"
+                    execBtn.TextColor3 = TEXT_COLOR
+                    execBtn.Font = Enum.Font.Gotham
+                    execBtn.TextSize = 12
+                    execBtn.TextXAlignment = Enum.TextXAlignment.Left
+                    execBtn.ZIndex = 102
+                    execBtn.Parent = ctxMenu
+                    
+                    execBtn.MouseButton1Click:Connect(function()
+                        ctxBg:Destroy()
+                        if itemData.Callback then
+                            RoseUI:Notify({Title = "🚀 Launching", Text = "Loading " .. tostring(itemData.Name) .. "...", Duration = 2})
+                            itemData.Callback()
+                        end
+                    end)
+                    
+                    -- Join Game Btn
+                    local joinBtn = Instance.new("TextButton")
+                    joinBtn.Size = UDim2.new(1, 0, 0, 30)
+                    joinBtn.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+                    joinBtn.BackgroundTransparency = 0.5
+                    joinBtn.Text = "  🎮 Join Game"
+                    joinBtn.TextColor3 = TEXT_COLOR
+                    joinBtn.Font = Enum.Font.Gotham
+                    joinBtn.TextSize = 12
+                    joinBtn.TextXAlignment = Enum.TextXAlignment.Left
+                    joinBtn.ZIndex = 102
+                    joinBtn.Parent = ctxMenu
+                    
+                    joinBtn.MouseButton1Click:Connect(function()
+                        ctxBg:Destroy()
+                        if itemData.PlaceId then
+                            RoseUI:Notify({Title = "🎮 Teleporting", Text = "Joining " .. tostring(itemData.Name) .. "...", Duration = 3})
+                            game:GetService("TeleportService"):Teleport(itemData.PlaceId, game:GetService("Players").LocalPlayer)
+                        else
+                            RoseUI:Notify({Title = "⚠️ Error", Text = "No PlaceId provided for this game.", Duration = 3})
+                        end
+                    end)
+                    
+                    -- Hover effects
+                    for _, btn in ipairs({execBtn, joinBtn}) do
+                        btn.MouseEnter:Connect(function()
+                            tweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = HEADER_COLOR, BackgroundTransparency = 0.8}):Play()
+                        end)
+                        btn.MouseLeave:Connect(function()
+                            tweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 15, 20), BackgroundTransparency = 0.5}):Play()
+                        end)
                     end
+                    
+                    ctxMenu.Size = UDim2.new(0, 180, 0, ctxList.AbsoluteContentSize.Y)
+                    
+                    ctxBg.MouseButton1Click:Connect(function() ctxBg:Destroy() end)
+                    ctxBg.MouseButton2Click:Connect(function() ctxBg:Destroy() end)
                 end)
                 
                 table.insert(cards, {Gui = card, Data = itemData})
