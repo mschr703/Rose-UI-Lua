@@ -856,17 +856,9 @@ function RoseUI:CreateWindow(options)
     local profileFrame = Instance.new("Frame")
     profileFrame.Size = UDim2.new(1, -10, 0, 50)
     profileFrame.Position = UDim2.new(0, 5, 1, -65)
-    profileFrame.BackgroundColor3 = Color3.fromRGB(30, 20, 35)
-    profileFrame.BackgroundTransparency = 0.5 
+    profileFrame.BackgroundTransparency = 1 
     profileFrame.ZIndex = 3
     profileFrame.Parent = sidebarFrame
-    Instance.new("UICorner", profileFrame).CornerRadius = UDim.new(0, 8)
-
-    local profileStroke = Instance.new("UIStroke")
-    profileStroke.Color = HEADER_COLOR
-    profileStroke.Transparency = 0.7
-    profileStroke.Thickness = 1
-    profileStroke.Parent = profileFrame
 
     local localPlayer = game:GetService("Players").LocalPlayer
     local pName = localPlayer and localPlayer.Name or "Guest"
