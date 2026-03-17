@@ -410,7 +410,7 @@ function RoseUI:CreateWindow(options)
     table.insert(_G.RoseUI_Connections, dragCon)
 
     local mainStroke = Instance.new("UIStroke")
-    mainStroke.Color = HEADER_COLOR
+    mainStroke.Color = Color3.fromRGB(15, 10, 20) -- Darker outer line as requested
     mainStroke.Transparency = 0.5
     mainStroke.Thickness = 2
     mainStroke.Parent = dragFrame
@@ -607,12 +607,32 @@ function RoseUI:CreateWindow(options)
     headerLine.Parent = dragFrame
     
     local hlGradient = Instance.new("UIGradient")
+    -- Red Glow Animation Effect
+    hlGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, HEADER_COLOR),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 50, 50)), -- Bright Red Center
+        ColorSequenceKeypoint.new(1, HEADER_COLOR)
+    })
     hlGradient.Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.4, 0.2),
         NumberSequenceKeypoint.new(0.5, 0),
+        NumberSequenceKeypoint.new(0.6, 0.2),
         NumberSequenceKeypoint.new(1, 1)
     })
+    hlGradient.Rotation = 0
+    hlGradient.Offset = Vector2.new(-1, 0)
     hlGradient.Parent = headerLine
+    
+    -- Animate the red beam scanning from left to right
+    task.spawn(function()
+        while headerLine.Parent do
+            hlGradient.Offset = Vector2.new(-1, 0)
+            local tween = tweenService:Create(hlGradient, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Offset = Vector2.new(1, 0)})
+            tween:Play()
+            tween.Completed:Wait()
+        end
+    end)
 
     -- Container für Alles was nicht Header ist (zum Ein/Ausblenden bei Mini)
     local bodyContainer = Instance.new("Frame")
@@ -952,6 +972,13 @@ function RoseUI:CreateWindow(options)
         }):Play()
         
         local textAlpha = state and 0 or 1
+        local profileBackgroundAlpha = state and 0.4 or 1
+        local profileStrokeAlpha = state and 0.6 or 1
+        
+        local pStroke = profileFrame:FindFirstChildOfClass("UIStroke")
+        if pStroke then tweenService:Create(pStroke, tInfo, {Transparency = profileStrokeAlpha}):Play() end
+        tweenService:Create(profileFrame, tInfo, {BackgroundTransparency = profileBackgroundAlpha}):Play()
+        
         for _, lbl in ipairs(sidebarElements.labels) do
             if lbl and lbl.Parent then
                 tweenService:Create(lbl, tInfo, {TextTransparency = textAlpha}):Play()
@@ -1077,7 +1104,7 @@ function RoseUI:CreateWindow(options)
         local tabBtn = Instance.new("TextButton")
         tabBtn.Size = UDim2.new(1, 0, 0, 35)
         tabBtn.BackgroundColor3 = Color3.fromRGB(40, 30, 45)
-        tabBtn.BackgroundTransparency = 0.85 
+        tabBtn.BackgroundTransparency = 0.4 -- Made highly visible so the boxes don't get lost
         tabBtn.Text = ""
         tabBtn.LayoutOrder = tabOptions.LayoutOrder or (#WindowObj.Tabs + 1)
         tabBtn.ZIndex = 4
@@ -1086,7 +1113,7 @@ function RoseUI:CreateWindow(options)
         
         local btnStroke = Instance.new("UIStroke")
         btnStroke.Color = HEADER_COLOR
-        btnStroke.Transparency = 0.8
+        btnStroke.Transparency = 0.6 -- Made highly visible
         btnStroke.Thickness = 1
         btnStroke.Parent = tabBtn
         
@@ -1224,13 +1251,13 @@ function RoseUI:CreateWindow(options)
                 local tStroke = t.Btn:FindFirstChildOfClass("UIStroke")
                 if t.Page == page then
                     tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 0.1}):Play()
-                    if tStroke then tweenService:Create(tStroke, tabTweenInfo, {Transparency = 0.2}):Play() end
+                    if tStroke then tweenService:Create(tStroke, tabTweenInfo, {Transparency = 0.1}):Play() end
                     tweenService:Create(t.Lbl, tabTweenInfo, {TextColor3 = TEXT_COLOR}):Play()
                     tweenService:Create(t.Img, tabTweenInfo, {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                     if t.TxtIcon then tweenService:Create(t.TxtIcon, tabTweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play() end
                 else
-                    tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 0.85}):Play()
-                    if tStroke then tweenService:Create(tStroke, tabTweenInfo, {Transparency = 0.8}):Play() end
+                    tweenService:Create(t.Btn, tabTweenInfo, {BackgroundTransparency = 0.4}):Play()
+                    if tStroke then tweenService:Create(tStroke, tabTweenInfo, {Transparency = 0.6}):Play() end
                     tweenService:Create(t.Lbl, tabTweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 140)}):Play()
                     tweenService:Create(t.Img, tabTweenInfo, {ImageColor3 = Color3.fromRGB(140, 140, 140)}):Play()
                     if t.TxtIcon then tweenService:Create(t.TxtIcon, tabTweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 140)}):Play() end
@@ -1263,7 +1290,7 @@ function RoseUI:CreateWindow(options)
             page.Position = UDim2.new(0, 10, 0, 10)
             tabBtn.BackgroundTransparency = 0.1
             local bStroke = tabBtn:FindFirstChildOfClass("UIStroke")
-            if bStroke then bStroke.Transparency = 0.2 end
+            if bStroke then bStroke.Transparency = 0.1 end
             tabLabel.TextColor3 = TEXT_COLOR
             tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
             tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -5114,7 +5141,7 @@ end
             local dayOfWeek = os.date("%A")
             local userRole = "Free User" -- Placeholder, could be integrated with your own auth
             
-            local keyTimeStr = "Developer / Lifetime"
+            local keyTimeStr = "Lifetime"
             pcall(function()
                 if type(LRM_SecondsLeft) == "number" then
                     if LRM_SecondsLeft > 0 and LRM_SecondsLeft < 315360000 then -- If less than 10 years, it's not a lifetime key
