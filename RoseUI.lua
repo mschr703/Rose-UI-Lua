@@ -1209,7 +1209,7 @@ function RoseUI:CreateWindow(options)
         
         -- Fancy Slide in/out Logic (Ultra Smooth)
         local isSwitching = false
-        tabBtn.MouseButton1Click:Connect(function()
+        local function SelectTabFunction()
             if WindowObj.CurrentTab == page or isSwitching then return end
             isSwitching = true
 
@@ -1248,7 +1248,8 @@ function RoseUI:CreateWindow(options)
             
             task.wait(0.2)
             isSwitching = false
-        end)
+        end
+        tabBtn.MouseButton1Click:Connect(SelectTabFunction)
         
         -- Setze ersten Tab aktiv
         if #WindowObj.Tabs == 0 then
@@ -1264,7 +1265,8 @@ function RoseUI:CreateWindow(options)
         table.insert(WindowObj.Tabs, {Btn = tabBtn, Page = page, Lbl = tabLabel, Img = tabIconImg, TxtIcon = tabIconText})
         
         local TabObj = {
-            Btn = tabBtn
+            Btn = tabBtn,
+            Select = SelectTabFunction
         }
         
         -- 0. SECTION
@@ -5187,6 +5189,14 @@ end
                 Image = "rbxassetid://10459521360", 
                 ImageColor = Color3.fromRGB(80, 100, 240) -- Bluish Discord-like tone
             })
+            
+            -- Force Home Tab to be the default open tab regardless of script execution order!
+            task.spawn(function()
+                task.wait(0.1) -- Tiny delay allows the script to finish building other tabs first
+                if HomeTab and type(HomeTab.Select) == "function" then
+                    HomeTab:Select()
+                end
+            end)
         end)
         if not success then
             warn("[RoseUI] HomeTab Creation Error: " .. tostring(err))
