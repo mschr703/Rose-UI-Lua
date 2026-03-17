@@ -792,9 +792,12 @@ function RoseUI:CreateWindow(options)
     -- ==========================================
     -- SIDEBAR (Links - Dunkles Rose)
     -- ==========================================
+    local isSidebarExpanded = false
+    local sidebarElements = { labels = {} }
+
     local sidebarFrame = Instance.new("Frame")
     sidebarFrame.Name = "Sidebar"
-    sidebarFrame.Size = UDim2.new(0, 160, 1, 0)
+    sidebarFrame.Size = UDim2.new(0, 50, 1, 0)
     sidebarFrame.Position = UDim2.new(0, 0, 0, 0)
     sidebarFrame.BackgroundTransparency = 1
     sidebarFrame.BorderSizePixel = 0
@@ -807,10 +810,12 @@ function RoseUI:CreateWindow(options)
     fpsLabel.BackgroundTransparency = 1
     fpsLabel.Text = "🌹 FPS: 60"
     fpsLabel.TextColor3 = HEADER_COLOR
+    fpsLabel.TextTransparency = 1
     fpsLabel.Font = Enum.Font.GothamBold
     fpsLabel.TextSize = 13
     fpsLabel.ZIndex = 3
     fpsLabel.Parent = sidebarFrame
+    table.insert(sidebarElements.labels, fpsLabel)
     
     local fpsStroke = Instance.new("UIStroke")
     fpsStroke.Color = Color3.fromRGB(0, 0, 0)
@@ -897,35 +902,39 @@ function RoseUI:CreateWindow(options)
     
     local nameLbl = Instance.new("TextLabel")
     nameLbl.Size = UDim2.new(1, -55, 0, 15)
-    nameLbl.Position = UDim2.new(0, 50, 0, 10)
+    nameLbl.Position = UDim2.new(0, 48, 0, 10)
     nameLbl.BackgroundTransparency = 1
     nameLbl.Text = pName
     nameLbl.TextColor3 = TEXT_COLOR
+    nameLbl.TextTransparency = 1
     nameLbl.Font = Enum.Font.GothamMedium
     nameLbl.TextSize = 12
     nameLbl.TextXAlignment = Enum.TextXAlignment.Left
     nameLbl.ZIndex = 4
     nameLbl.Parent = profileFrame
+    table.insert(sidebarElements.labels, nameLbl)
 
     local rankLbl = Instance.new("TextLabel")
     rankLbl.Size = UDim2.new(1, -55, 0, 15)
-    rankLbl.Position = UDim2.new(0, 50, 0, 25)
+    rankLbl.Position = UDim2.new(0, 48, 0, 25)
     rankLbl.BackgroundTransparency = 1
     rankLbl.Text = "Free User"
     rankLbl.TextColor3 = HEADER_COLOR
+    rankLbl.TextTransparency = 1
     rankLbl.Font = Enum.Font.Gotham
     rankLbl.TextSize = 10
     rankLbl.TextXAlignment = Enum.TextXAlignment.Left
     rankLbl.ZIndex = 4
     rankLbl.Parent = profileFrame
+    table.insert(sidebarElements.labels, rankLbl)
     
     -- ==========================================
     -- CONTENT AREA (Rechts)
     -- ==========================================
     local contentFrame = Instance.new("Frame")
     contentFrame.Name = "ContentArea"
-    contentFrame.Size = UDim2.new(1, -160, 1, 0)
-    contentFrame.Position = UDim2.new(0, 160, 0, 0)
+    contentFrame.Size = UDim2.new(1, -50, 1, 0)
+    contentFrame.Position = UDim2.new(0, 50, 0, 0)
     contentFrame.BackgroundColor3 = CONTENT_COLOR
     contentFrame.BackgroundTransparency = 0.15 -- Less transparency 
     contentFrame.BorderSizePixel = 0
@@ -940,6 +949,40 @@ function RoseUI:CreateWindow(options)
     pageContainer.ZIndex = 10
     pageContainer.ClipsDescendants = true -- Wichtig für Slide In Animation
     pageContainer.Parent = contentFrame
+
+    local function setSidebarExpanded(state)
+        if isSidebarExpanded == state then return end
+        isSidebarExpanded = state
+        
+        local targetWidth = state and 160 or 50
+        local tInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+        
+        tweenService:Create(sidebarFrame, tInfo, {Size = UDim2.new(0, targetWidth, 1, 0)}):Play()
+        tweenService:Create(contentFrame, tInfo, {
+            Size = UDim2.new(1, -targetWidth, 1, 0),
+            Position = UDim2.new(0, targetWidth, 0, 0)
+        }):Play()
+        
+        local textAlpha = state and 0 or 1
+        for _, lbl in ipairs(sidebarElements.labels) do
+            if lbl and lbl.Parent then
+                tweenService:Create(lbl, tInfo, {TextTransparency = textAlpha}):Play()
+            end
+        end
+    end
+
+    sidebarFrame.MouseEnter:Connect(function() setSidebarExpanded(true) end)
+    sidebarFrame.MouseLeave:Connect(function() setSidebarExpanded(false) end)
+    sidebarFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            setSidebarExpanded(true)
+        end
+    end)
+    contentFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch and isSidebarExpanded then
+            setSidebarExpanded(false)
+        end
+    end)
     
     -- ==========================================
     -- API OBJECT & CONFIGS
@@ -1066,7 +1109,7 @@ function RoseUI:CreateWindow(options)
         
         local tabIconImg = Instance.new("ImageLabel")
         tabIconImg.Size = UDim2.new(0, 14, 0, 14)
-        tabIconImg.Position = UDim2.new(0, 14, 0.5, -7)
+        tabIconImg.Position = UDim2.new(0, 18, 0.5, -7)
         tabIconImg.BackgroundTransparency = 1
         tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconImg.ZIndex = 5
@@ -1074,7 +1117,7 @@ function RoseUI:CreateWindow(options)
 
         local tabIconText = Instance.new("TextLabel")
         tabIconText.Size = UDim2.new(0, 14, 0, 14)
-        tabIconText.Position = UDim2.new(0, 14, 0.5, -7)
+        tabIconText.Position = UDim2.new(0, 18, 0.5, -7)
         tabIconText.BackgroundTransparency = 1
         tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconText.Font = Enum.Font.GothamBold
@@ -1089,30 +1132,32 @@ function RoseUI:CreateWindow(options)
         tabLabel.TextXAlignment = Enum.TextXAlignment.Left
         tabLabel.Font = Enum.Font.GothamSemibold
         tabLabel.TextSize = 13
+        tabLabel.TextTransparency = 1 -- Hidden by default
         tabLabel.ZIndex = 5
         tabLabel.Parent = tabBtn
+        table.insert(sidebarElements.labels, tabLabel)
 
         if RoseUI.SafeMode and emojiIcon then
             tabIconImg.Visible = false
             tabIconText.Visible = true
             tabIconText.Text = emojiIcon
-            tabLabel.Size = UDim2.new(1, -35, 1, 0)
-            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+            tabLabel.Size = UDim2.new(1, -38, 1, 0)
+            tabLabel.Position = UDim2.new(0, 38, 0, 0)
         elseif tabIcon == "" then
             tabIconImg.Visible = false
             tabIconText.Visible = false
             tabLabel.Size = UDim2.new(1, -20, 1, 0)
-            tabLabel.Position = UDim2.new(0, 12, 0, 0)
+            tabLabel.Position = UDim2.new(0, 15, 0, 0)
         elseif string.match(tabIcon, "rbxassetid://") then
             tabIconImg.Image = tabIcon
             tabIconText.Visible = false
-            tabLabel.Size = UDim2.new(1, -35, 1, 0)
-            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+            tabLabel.Size = UDim2.new(1, -38, 1, 0)
+            tabLabel.Position = UDim2.new(0, 38, 0, 0)
         elseif string.match(tabIcon, "%.png") or string.match(tabIcon, "http") then
             tabIconImg.Image = ""
             tabIconText.Visible = false
-            tabLabel.Size = UDim2.new(1, -35, 1, 0)
-            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+            tabLabel.Size = UDim2.new(1, -38, 1, 0)
+            tabLabel.Position = UDim2.new(0, 38, 0, 0)
             
             task.spawn(function()
                 local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
@@ -1137,8 +1182,8 @@ function RoseUI:CreateWindow(options)
         else
             tabIconImg.Visible = false
             tabIconText.Text = tabIcon
-            tabLabel.Size = UDim2.new(1, -35, 1, 0)
-            tabLabel.Position = UDim2.new(0, 32, 0, 0)
+            tabLabel.Size = UDim2.new(1, -38, 1, 0)
+            tabLabel.Position = UDim2.new(0, 38, 0, 0)
         end
         
         local page = Instance.new("ScrollingFrame")
@@ -4229,154 +4274,560 @@ function RoseUI:CreateWindow(options)
     -- ================= INTRO ANIMATION =================
     dragFrame.Size = UDim2.new(0, 0, 0, 0)
     dragFrame.ClipsDescendants = true
-    
-    local introBg = Instance.new("Frame")
-    introBg.Size = UDim2.new(1, 0, 1, 0)
-    introBg.BackgroundColor3 = Color3.fromRGB(12, 8, 12)
-    introBg.BackgroundTransparency = 1 -- User requested NO black screen overlay
-    introBg.ZIndex = 999
-    introBg.Parent = screenGui
-    
-    local titleTextAnim = Instance.new("TextLabel")
-    titleTextAnim.BackgroundTransparency = 1
-    titleTextAnim.Text = titleText == "Rose Hub | Game Selector" and "RoseHub" or titleText
-    titleTextAnim.TextColor3 = Color3.fromRGB(220, 10, 30) -- Deep Beautiful Rosa/Red
-    titleTextAnim.TextSize = 90
-    titleTextAnim.Size = UDim2.new(0, 0, 0, 0) -- Let AutomaticSize handle width perfectly
-    titleTextAnim.AutomaticSize = Enum.AutomaticSize.XY
-    titleTextAnim.Position = UDim2.new(0.5, 0, 0.5, 0)
-    titleTextAnim.AnchorPoint = Vector2.new(0.5, 0.5)
-    titleTextAnim.TextXAlignment = Enum.TextXAlignment.Left
-    
-    -- Load an elegant "Grandma" cursive font 
-    local fontsToTry = {
-        "rbxasset://fonts/families/GreatVibes.json",
-        "rbxasset://fonts/families/Parisienne.json",
-        "rbxasset://fonts/families/DancingScript.json",
-        "rbxasset://fonts/families/Pacifico.json"
-    }
-    local appliedFont = false
-    for _, fontStr in ipairs(fontsToTry) do
-        local s, f = pcall(function() return Font.new(fontStr, Enum.FontWeight.Regular) end)
-        if s and f then
-            titleTextAnim.FontFace = f
-            appliedFont = true
-            break
-        end
-    end
-    if not appliedFont then titleTextAnim.Font = Enum.Font.SourceSansItalic end
-    
-    titleTextAnim.ZIndex = 1000
-    titleTextAnim.Parent = introBg
-    
-    local grad = Instance.new("UIGradient")
-    grad.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(0.501, 1),
-        NumberSequenceKeypoint.new(1, 1)
-    })
-    grad.Offset = Vector2.new(-0.5, 0)
-    grad.Parent = titleTextAnim
-    
-    local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 0
-    stroke.Color = Color3.fromRGB(255, 60, 80)
-    stroke.Transparency = 1
-    stroke.Parent = titleTextAnim
 
-    local penGlow = Instance.new("Frame")
-    penGlow.Size = UDim2.new(0, 8, 0, 8)
-    penGlow.AnchorPoint = Vector2.new(0.5, 0.5)
-    penGlow.Position = UDim2.new(0, 0, 0.5, 0) -- Starts exactly at left edge of the dynamic text width
-    penGlow.BackgroundColor3 = Color3.fromRGB(255, 200, 200)
-    penGlow.ZIndex = 1001
-    penGlow.Parent = titleTextAnim
-    Instance.new("UICorner", penGlow).CornerRadius = UDim.new(1, 0)
-    
-    local penGlowOuter = Instance.new("Frame")
-    penGlowOuter.Size = UDim2.new(0, 25, 0, 25)
-    penGlowOuter.AnchorPoint = Vector2.new(0.5, 0.5)
-    penGlowOuter.Position = UDim2.new(0.5, 0, 0.5, 0)
-    penGlowOuter.BackgroundColor3 = Color3.fromRGB(255, 20, 40)
-    penGlowOuter.BackgroundTransparency = 0.5
-    penGlowOuter.ZIndex = 1000
-    penGlowOuter.Parent = penGlow
-    Instance.new("UICorner", penGlowOuter).CornerRadius = UDim.new(1, 0)
-
-    task.spawn(function()
-        task.wait(0.2)
-        -- Glow pulse
-        local pulseTw = tweenService:Create(penGlowOuter, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0, 40, 0, 40), BackgroundTransparency = 0.9})
-        pulseTw:Play()
+-- Load vectors dynamically from GitHub to keep this file clean!
+        local HttpService = game:GetService("HttpService")
+        local roseHubOutline = {}
         
-        -- Plop in the pen
-        penGlow.Size = UDim2.new(0, 0, 0, 0)
-        tweenService:Create(penGlow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 8, 0, 8)}):Play()
-        task.wait(0.3)
-        
-        -- Slow smooth cursive writing swoop
-        local twTime = 1.4 
-        local penTw = tweenService:Create(penGlow, TweenInfo.new(twTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = UDim2.new(1, 0, 0.5, 0)})
-        local gradTw = tweenService:Create(grad, TweenInfo.new(twTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Offset = Vector2.new(0.5, 0)})
-        
-        penTw:Play()
-        gradTw:Play()
-        
-        local isPainting = true
-        task.spawn(function()
-            while isPainting do
-                task.wait(0.03)
-                if not penGlow or not titleTextAnim then break end
-                local spark = Instance.new("Frame")
-                spark.Size = UDim2.new(0, math.random(3, 6), 0, math.random(3, 6))
-                spark.AnchorPoint = Vector2.new(0.5, 0.5)
-                spark.Position = penGlow.Position + UDim2.new(0, math.random(-8, 8), 0, math.random(-15, 15))
-                spark.BackgroundColor3 = Color3.fromRGB(255, math.random(100, 150), math.random(100, 150))
-                spark.Rotation = math.random(0, 360)
-                spark.ZIndex = 1002
-                spark.Parent = titleTextAnim
-                Instance.new("UICorner", spark).CornerRadius = UDim.new(1, 0)
-                
-                tweenService:Create(spark, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, 0, 0, 0), 
-                    Position = spark.Position + UDim2.new(0, math.random(-25, 25), 0, math.random(10, 40)), 
-                    BackgroundTransparency = 1,
-                    Rotation = spark.Rotation + math.random(90, 180)
-                }):Play()
-                game.Debris:AddItem(spark, 0.6)
+        pcall(function()
+            local rawJson = game:HttpGet("https://raw.githubusercontent.com/mschr703/Rose-UI-Lua/main/RoseHubSVG.json")
+            if rawJson then
+                local parsed = HttpService:JSONDecode(rawJson)
+                for _, shape in ipairs(parsed) do
+                    local stroke = {}
+                    for _, pt in ipairs(shape) do
+                        table.insert(stroke, Vector2.new(pt[1], pt[2]))
+                    end
+                    table.insert(roseHubOutline, stroke)
+                end
             end
         end)
         
-        penTw.Completed:Wait()
-        isPainting = false
-        pulseTw:Cancel()
+        -- Fallback if fetch fails or is empty, just a tiny dot
+        if #roseHubOutline == 0 then
+            roseHubOutline = { { Vector2.new(0, 0), Vector2.new(1, 1) } }
+        end
+
+-- ========================================================
+-- LOGO ASSET LOADER (Maximum Compatibility Edition)
+-- ========================================================
+local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
+local logoAssetUrl = "" -- Empty means we fallback to the Rose Emoji
+
+pcall(function()
+    if getasset and type(getasset) == "function" then
+        -- Ultra safe checks to prevent Xeno or basic executors from crashing
+        local hasIsFolder = type(isfolder) == "function"
+        local hasMakeFolder = type(makefolder) == "function"
+        local hasIsFile = type(isfile) == "function"
+        local hasWriteFile = type(writefile) == "function"
         
-        -- Fancy finish pop (Pen disappears)
-        tweenService:Create(penGlow, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)}):Play()
-        tweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Thickness = 2, Transparency = 0}):Play()
+        if hasIsFolder and hasMakeFolder then
+            pcall(function()
+                if not isfolder("RoseHub") then makefolder("RoseHub") end
+                if not isfolder("RoseHub/assets") then makefolder("RoseHub/assets") end
+            end)
+        end
         
-        -- Smoothly enlarge the text from the AnchorPoint center using TextSize
-        tweenService:Create(titleTextAnim, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextSize = 105}):Play()
+        local path = "RoseHub/assets/rose_logo_v3_small.png"
+        local fileExists = false
+        if hasIsFile then
+            pcall(function() fileExists = isfile(path) end)
+        end
         
-        task.wait(0.4)
-        tweenService:Create(stroke, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Thickness = 0, Transparency = 1}):Play()
-        tweenService:Create(titleTextAnim, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {TextTransparency = 1, TextSize = 130}):Play()
+        if not fileExists and hasWriteFile then
+            local success, data = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/roselogo.png") end)
+            if success and data then 
+                pcall(function() writefile(path, data) end)
+            end
+        end
         
-        task.wait(0.6)
-        introBg:Destroy()
+        -- Final check before assigning Native Asset URL
+        if hasIsFile then
+            local stillExists = false
+            pcall(function() stillExists = isfile(path) end)
+            if stillExists then
+                logoAssetUrl = getasset(path)
+            end
+        end
+    end
+end)
+
+local tweenService = game:GetService("TweenService")
+local coreGui = game:GetService("CoreGui")
+local debris = game:GetService("Debris")
+
+local GUI_NAME = "RoseUI_Animation_Test"
+local CANVAS_SIZE = Vector2.new(400, 120)
+local CANVAS_PADDING = 12
+local BG_COLOR = Color3.fromRGB(12, 8, 12)
+local STROKE_COLOR = Color3.fromHex("#c00000")
+local OUTLINE_COLOR = Color3.fromHex("#5a0000") -- Darker red for the stroke outline
+local GLOW_COLOR = Color3.fromRGB(220, 0, 0) -- Pure bright red for aura
+local GLOW_SPREAD = 45 -- How much wider than the text the glow aura reaches
+local GLOW_OPACITY = 0.88 -- Very transparent particles stacked to form organic glow
+local STROKE_THICKNESS = 21
+local BRUSH_STEP = 1
+local SEGMENT_WAIT_EVERY = 18
+local SIMPLIFY_SKIP = 2
+local START_DELAY = 0.35
+local END_HOLD = 1.35
+
+-- screenGui from RoseUI
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local introBg = Instance.new("Frame")
+introBg.Size = UDim2.new(1, 0, 1, 0)
+introBg.BackgroundColor3 = Color3.fromRGB(12, 8, 12)
+introBg.BackgroundTransparency = 1 -- Start fully transparent
+introBg.ZIndex = 999
+introBg.Parent = screenGui
+
+-- Fade in darkness smoothly
+game:GetService("TweenService"):Create(introBg, TweenInfo.new(1.0, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0.45
+}):Play()
+introBg.BorderSizePixel = 0
+-- introBg.ZIndex = 999 -- Already set above
+-- introBg.Parent = screenGui -- Already set above
+
+local canvas = Instance.new("Frame")
+canvas.Size = UDim2.fromOffset(CANVAS_SIZE.X, CANVAS_SIZE.Y)
+canvas.Position = UDim2.new(0.5, 0, 0.5, 75)
+canvas.AnchorPoint = Vector2.new(0.5, 0.5)
+canvas.BackgroundTransparency = 1
+canvas.BorderSizePixel = 0
+canvas.ZIndex = 1000
+canvas.Parent = introBg
+
+local drawFolder = Instance.new("Folder")
+drawFolder.Name = "DrawnSegments"
+drawFolder.Parent = canvas
+
+local function clonePath(path)
+    local out = table.create(#path)
+    for i = 1, #path do
+        out[i] = path[i]
+    end
+    return out
+end
+
+local function reversePath(path)
+    local out = table.create(#path)
+    for i = #path, 1, -1 do
+        out[#out + 1] = path[i]
+    end
+    return out
+end
+
+local function rotatePath(path, startIndex)
+    local out = table.create(#path)
+    for i = startIndex, #path do
+        out[#out + 1] = path[i]
+    end
+    for i = 1, startIndex - 1 do
+        out[#out + 1] = path[i]
+    end
+    return out
+end
+
+local function isClosedPath(path)
+    if #path < 3 then
+        return false
+    end
+    return (path[1] - path[#path]).Magnitude <= 4
+end
+
+local function orientClosedPathLeftToRight(path)
+    local leftIndex = 1
+    local bestX = math.huge
+    local bestY = math.huge
+    for i, p in ipairs(path) do
+        if p.X < bestX or (math.abs(p.X - bestX) < 0.01 and p.Y < bestY) then
+            bestX = p.X
+            bestY = p.Y
+            leftIndex = i
+        end
+    end
+
+    local rotated = rotatePath(path, leftIndex)
+    local nextIndex = math.min(4, #rotated)
+    local prevIndex = #rotated - math.min(3, #rotated - 1)
+    local nextX = rotated[nextIndex].X
+    local prevX = rotated[prevIndex].X
+
+    if nextX < prevX then
+        path = reversePath(path)
+        leftIndex = 1
+        bestX = math.huge
+        bestY = math.huge
+        for i, p in ipairs(path) do
+            if p.X < bestX or (math.abs(p.X - bestX) < 0.01 and p.Y < bestY) then
+                bestX = p.X
+                bestY = p.Y
+                leftIndex = i
+            end
+        end
+        rotated = rotatePath(path, leftIndex)
+    end
+
+    return rotated
+end
+
+local function simplifyPath(path, skip)
+    if skip <= 1 or #path <= 3 then
+        return path
+    end
+    local out = { path[1] }
+    for i = 2, #path - 1, skip do
+        out[#out + 1] = path[i]
+    end
+    out[#out + 1] = path[#path]
+    return out
+end
+
+local function getBounds(paths)
+    local minX, minY = math.huge, math.huge
+    local maxX, maxY = -math.huge, -math.huge
+    for _, path in ipairs(paths) do
+        for _, p in ipairs(path) do
+            if p.X < minX then minX = p.X end
+            if p.Y < minY then minY = p.Y end
+            if p.X > maxX then maxX = p.X end
+            if p.Y > maxY then maxY = p.Y end
+        end
+    end
+    return minX, minY, maxX, maxY
+end
+
+local function sortAndPreparePaths(paths)
+    local meta = {}
+    for _, sourcePath in ipairs(paths) do
+        local path = clonePath(sourcePath)
+        local minX, maxX = math.huge, -math.huge
+        local minY = math.huge
+        for _, p in ipairs(path) do
+            if p.X < minX then minX = p.X end
+            if p.X > maxX then maxX = p.X end
+            if p.Y < minY then minY = p.Y end
+        end
+
+        if isClosedPath(path) then
+            path = orientClosedPathLeftToRight(path)
+        elseif path[1].X > path[#path].X then
+            path = reversePath(path)
+        end
+
+        meta[#meta + 1] = {
+            path = path,
+            minX = minX,
+            maxX = maxX,
+            minY = minY
+        }
+    end
+
+    table.sort(meta, function(a, b)
+        if math.abs(a.minX - b.minX) < 10 then
+            return a.minY < b.minY
+        end
+        return a.minX < b.minX
+    end)
+
+    local ordered = {}
+    for _, item in ipairs(meta) do
+        ordered[#ordered + 1] = item.path
+    end
+    return ordered
+end
+
+local orderedPaths = sortAndPreparePaths(roseHubOutline)
+local minX, minY, maxX, maxY = getBounds(orderedPaths)
+local width = maxX - minX
+local height = maxY - minY
+local fitScale = math.min(
+    (CANVAS_SIZE.X - CANVAS_PADDING * 2) / width,
+    (CANVAS_SIZE.Y - CANVAS_PADDING * 2) / height
+)
+local stretchX = 1.15 -- Stretch text horizontally by 15% to give loops breathing room
+local scaledWidth = width * fitScale * stretchX
+local offsetX = (CANVAS_SIZE.X - scaledWidth) * 0.5
+local offsetY = (CANVAS_SIZE.Y - height * fitScale) * 0.5
+
+local function transformPoint(p)
+    return Vector2.new(
+        (p.X - minX) * fitScale * stretchX + offsetX,
+        (p.Y - minY) * fitScale + offsetY
+    )
+end
+
+local transformedPaths = {}
+for pathIndex, path in ipairs(orderedPaths) do
+    local isO = (pathIndex == 2)
+    local o_cy = 0
+    if isO then
+        local pMinY, pMaxY = math.huge, -math.huge
+        for _, p in ipairs(path) do
+            if p.Y < pMinY then pMinY = p.Y end
+            if p.Y > pMaxY then pMaxY = p.Y end
+        end
+        o_cy = (pMinY + pMaxY) * 0.5
+    end
+
+    local transformed = table.create(#path)
+    for i, p in ipairs(path) do
+        local finalP = p
+        if isO then
+            -- Scale the 'o' radially outward from its center by 1.3x 
+            -- to keep it completely hollow regardless of the thickness
+            finalP = Vector2.new(o_cy + (p.X - o_cy) * 1.3, o_cy + (p.Y - o_cy) * 1.4)
+        end
+        transformed[i] = transformPoint(finalP)
+    end
+    transformed = simplifyPath(transformed, SIMPLIFY_SKIP)
+    transformedPaths[#transformedPaths + 1] = transformed
+end
+
+local function makeCircle(position, diameter, color, zindex, parent, transparency)
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.fromOffset(diameter, diameter)
+    dot.AnchorPoint = Vector2.new(0.5, 0.5)
+    dot.Position = UDim2.fromOffset(position.X, position.Y)
+    dot.BackgroundColor3 = color
+    dot.BackgroundTransparency = transparency or 0
+    dot.BorderSizePixel = 0
+    dot.ZIndex = zindex
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+    dot.Parent = parent
+    return dot
+end
+
+local function makeGlow(position, diameter, color, zindex, parent)
+    local glow = Instance.new("ImageLabel")
+    glow.Image = "rbxassetid://1316045217" -- Soft blurry circle particle
+    glow.ImageColor3 = color
+    glow.BackgroundTransparency = 1
+    glow.ImageTransparency = 1 -- Start totally invisible
+    glow.Size = UDim2.fromOffset(diameter, diameter)
+    glow.AnchorPoint = Vector2.new(0.5, 0.5)
+    glow.Position = UDim2.fromOffset(position.X, position.Y)
+    glow.BorderSizePixel = 0
+    glow.ZIndex = zindex
+    glow.Parent = parent
+    return glow
+end
+
+local function drawSegment(pA, pB, thickness, color, zindex, parent, transparency)
+    local delta = pB - pA
+    local dist = delta.Magnitude
+    if dist < 0.05 then
+        local dot = makeCircle(pA, thickness, color, zindex, parent, transparency)
+        return nil, dot
+    end
+
+    local line = Instance.new("Frame")
+    line.Size = UDim2.fromOffset(dist + thickness, thickness)
+    line.AnchorPoint = Vector2.new(0.5, 0.5)
+    line.Position = UDim2.fromOffset((pA.X + pB.X) * 0.5, (pA.Y + pB.Y) * 0.5)
+    line.Rotation = math.deg(math.atan2(delta.Y, delta.X))
+    line.BackgroundColor3 = color
+    line.BackgroundTransparency = transparency or 0
+    line.BorderSizePixel = 0
+    line.ZIndex = zindex - 1
+    Instance.new("UICorner", line).CornerRadius = UDim.new(1, 0)
+    line.Parent = parent
+    
+    -- Crucial: Place a circle at the end point to act as a perfect round hinge for the next segment
+    local joint = makeCircle(pB, thickness, color, zindex, parent, transparency)
+    
+    return line, joint
+end
+
+local function fadeOutAll()
+    local tweens = {}
+    for _, obj in ipairs(screenGui:GetDescendants()) do
+        local goal = {}
+        if obj:IsA("Frame") and obj ~= introBg then
+            goal.BackgroundTransparency = 1
+        elseif obj:IsA("ImageLabel") then
+            goal.ImageTransparency = 1
+        elseif obj:IsA("TextLabel") then
+            goal.TextTransparency = 1
+        end
+        if next(goal) then
+            tweens[#tweens + 1] = tweenService:Create(obj, TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), goal)
+        end
+    end
+
+    local bgTween = tweenService:Create(introBg, TweenInfo.new(0.45, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+        BackgroundTransparency = 1
+    })
+    tweens[#tweens + 1] = bgTween
+
+    for _, tween in ipairs(tweens) do
+        tween:Play()
+    end
+
+    bgTween.Completed:Wait()
+end
+
+task.spawn(function()
+    task.wait(START_DELAY)
+
+    -- 1. Pop the logo out beautifully BEFORE drawing the text
+    local logo
+    local showGoal = { Size = UDim2.fromOffset(110, 110) }
+    
+    if logoAssetUrl ~= "" then
+        logo = Instance.new("ImageLabel")
+        logo.Image = logoAssetUrl
+        logo.ImageTransparency = 1
+        showGoal.ImageTransparency = 0
+    else
+        logo = Instance.new("TextLabel")
+        logo.Text = "🌹"
+        logo.TextScaled = true
+        logo.TextTransparency = 1
+        showGoal.TextTransparency = 0
+    end
+
+    logo.Name = "RoseLogo"
+    logo.BackgroundTransparency = 1
+    logo.AnchorPoint = Vector2.new(0.5, 0.5)
+    
+    logo.Position = UDim2.new(0.5, 0, 0.5, -20)
+    
+    logo.Size = UDim2.fromOffset(0, 0)
+    logo.ZIndex = 2000 -- Ensure logo is above everything
+    logo.Parent = screenGui -- Parent directly to ScreenGui so it's guaranteed visible over everything
+
+    local showTween = tweenService:Create(logo, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), showGoal)
+    showTween:Play()
+    showTween.Completed:Wait()
+    -- 2. Draw the cursive text (Base Text First)
+    local segmentCounter = 0
+    local baseThickness = math.max(2, math.floor(STROKE_THICKNESS * fitScale * 1.0))
+    local shadowThickness = baseThickness + 4 -- 2 pixels outline on each side to prevent aliasing
+    local glowThickness = shadowThickness + GLOW_SPREAD
+    local lastEnd = nil
+    
+    local outlineFrames = {}
+    local glowFrames = {}
+    
+    local function addOutline(obj1, obj2)
+        if obj1 then outlineFrames[#outlineFrames + 1] = obj1 end
+        if obj2 then outlineFrames[#outlineFrames + 1] = obj2 end
+    end
+    
+    local function createConcentricGlow(x, y, diameter, color, zindex, parent, baseTransp, layers, outTable)
+        for i = 1, layers do
+            local fraction = i / layers
+            -- Soft exponential fade to the edges
+            local targetTransp = baseTransp + (1 - baseTransp) * math.pow(fraction, 1.5)
+            targetTransp = math.min(0.99, targetTransp)
+            
+            local dot = Instance.new("Frame")
+            dot.BackgroundColor3 = color
+            dot.BackgroundTransparency = 1 -- fully hidden at start
+            dot.BorderSizePixel = 0
+            dot.Size = UDim2.fromOffset(diameter * fraction, diameter * fraction)
+            dot.Position = UDim2.fromOffset(x, y)
+            dot.AnchorPoint = Vector2.new(0.5, 0.5)
+            dot.ZIndex = zindex
+            Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+            dot.Parent = parent
+            
+            outTable[#outTable+1] = { obj = dot, target = targetTransp }
+        end
+    end
+
+    -- PASS: Prepare Cinematic Ambient Backglow natively
+    local ambientGlows = {}
+    for _, path in ipairs(transformedPaths) do
+        if #path > 0 then
+            local pMinX, pMaxX = math.huge, -math.huge
+            local pMinY, pMaxY = math.huge, -math.huge
+            for _, p in ipairs(path) do
+                if p.X < pMinX then pMinX = p.X end
+                if p.X > pMaxX then pMaxX = p.X end
+                if p.Y < pMinY then pMinY = p.Y end
+                if p.Y > pMaxY then pMaxY = p.Y end
+            end
+            
+            local w = pMaxX - pMinX
+            local h = pMaxY - pMinY
+            local cx = pMinX + w * 0.5
+            local cy = pMinY + h * 0.5
+            local maxDim = math.max(w, h, 80)
+            
+            -- Deep wide crimson aura (Outer Bloom) - Natively stacked!
+            createConcentricGlow(cx, cy, maxDim * 2.8 + 100, Color3.fromHex("#a00000"), 998, drawFolder, 0.94, 14, ambientGlows)
+
+            -- Brighter neon core (Inner Bloom) - Natively stacked!
+            createConcentricGlow(cx, cy, maxDim * 1.8 + 40, Color3.fromHex("#ff0000"), 999, drawFolder, 0.88, 10, ambientGlows)
+        end
         
+        if #path > 0 then
+            makeCircle(path[1], baseThickness, STROKE_COLOR, 1006, drawFolder)
+            -- Hidden dark red outline
+            addOutline(makeCircle(path[1], shadowThickness, OUTLINE_COLOR, 1004, drawFolder, 1))
+
+            for i = 2, #path do
+                local pA = path[i - 1]
+                local pB = path[i]
+                
+                -- Draw main red
+                drawSegment(pA, pB, baseThickness, STROKE_COLOR, 1006, drawFolder)
+                
+                -- Draw hidden shadow outline concurrently
+                local line, joint = drawSegment(pA, pB, shadowThickness, OUTLINE_COLOR, 1004, drawFolder, 1)
+                addOutline(line, joint)
+                
+                segmentCounter = segmentCounter + 1
+                if segmentCounter % SEGMENT_WAIT_EVERY == 0 then
+                    task.wait()
+                end
+            end
+
+            lastEnd = path[#path]
+        end
+    end
+
+    -- 3. Fade in the Outline simultaneously after completion
+    for _, obj in ipairs(outlineFrames) do
+        tweenService:Create(obj, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
+    end
+    -- Also bloom the beautiful new ambient backlights slowly to create a gorgeous aura!
+    for _, glowData in ipairs(ambientGlows) do
+        tweenService:Create(glowData.obj, TweenInfo.new(1.2, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), { BackgroundTransparency = glowData.target }):Play()
+    end
+    task.wait(1.2)
+
+    -- 4. Hold for a moment so the user can literally soak in the neon glow
+    task.wait(1.5)
+
+    -- 4. Shrink logo slightly before the full fade out to simulate "jumping out"
+    local shrinkTween = tweenService:Create(logo, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.fromOffset(80, 80)
+    })
+    shrinkTween:Play()
+    shrinkTween.Completed:Wait()
+
+    -- 5. Fade everything out
+    fadeOutAll()
+    introBg:Destroy()
+
         -- Open main window
         local openTw = tweenService:Create(dragFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = DEFAULT_SIZE})
         openTw:Play()
         openTw.Completed:Wait()
         dragFrame.ClipsDescendants = false
         
-        -- Welcome Notification nach dem das Fenster offen ist
         local pName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Guest"
         RoseUI:Notify({Title = "🌹 Welcome, " .. pName .. "!", Text = "Successfully loaded " .. titleText .. ". Enjoy!", Duration = 5})
-    end)
-    
+
+end)
     -- AUTOMATIC AUTOLOADER:
     -- Wait 2 seconds for the user's script to finish building all their Tabs and Elements, then inject the saved configs natively.
     task.spawn(function()
