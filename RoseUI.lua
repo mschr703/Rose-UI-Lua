@@ -1526,7 +1526,7 @@ function RoseUI:CreateWindow(options)
             bgImage.Size = UDim2.new(1, 0, 1, 0)
             bgImage.BackgroundTransparency = 1
             bgImage.Image = cardOptions.Image or "rbxassetid://10459521360"
-            bgImage.ImageColor3 = Color3.fromRGB(80, 150, 255)
+            bgImage.ImageColor3 = cardOptions.ImageColor or Color3.fromRGB(80, 150, 255)
             bgImage.ImageTransparency = 0.6
             bgImage.ScaleType = Enum.ScaleType.Crop
             bgImage.ZIndex = 11
@@ -1553,7 +1553,7 @@ function RoseUI:CreateWindow(options)
             cTitle.Parent = cardFrame
             
             local cDesc = Instance.new("TextLabel")
-            cDesc.Size = UDim2.new(1, -30, 0, 30)
+            cDesc.Size = UDim2.new(1, -30, 0, 35)
             cDesc.Position = UDim2.new(0, 15, 0, 35)
             cDesc.BackgroundTransparency = 1
             cDesc.Text = cardOptions.Desc or "Loading server data..."
@@ -1565,6 +1565,12 @@ function RoseUI:CreateWindow(options)
             cDesc.TextYAlignment = Enum.TextYAlignment.Top
             cDesc.ZIndex = 12
             cDesc.Parent = cardFrame
+            
+            return {
+                Frame = cardFrame,
+                Title = cTitle,
+                Desc = cDesc
+            }
         end
         
         -- 1. BUTTON
@@ -5084,9 +5090,10 @@ end
             
             local homeLine = Instance.new("Frame")
             homeLine.Size = UDim2.new(1, -20, 0, 1)
-            homeLine.Position = UDim2.new(0, 10, 0, 41) -- Below the Home button in the gap
+            -- Mathematically exactly 48 absolute Y to match the top line of the right side page tabs! (15 TabContainer + 33 = 48)
+            homeLine.Position = UDim2.new(0, 10, 0, 33) 
             homeLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            homeLine.BackgroundTransparency = 0.85 -- Made slightly more opaque so it is clearly visible
+            homeLine.BackgroundTransparency = 0.85
             homeLine.BorderSizePixel = 0
             homeLine.ZIndex = 4
             homeLine.Parent = HomeTab.Btn
@@ -5156,10 +5163,29 @@ end
                 maxPlayers = game:GetService("Players").MaxPlayers
             end)
             
-            HomeTab:AddDashboardFullCard({
+            local serverCard = HomeTab:AddDashboardFullCard({
                 Title = "Server Information",
-                Desc = "Place ID: " .. tostring(game.PlaceId) .. "\nPlayers: " .. tostring(playerCount) .. " / " .. tostring(maxPlayers) .. "\nJob ID: " .. tostring(game.JobId),
-                Image = "rbxassetid://10111160350" -- Alternate sleek fluid/tech background
+                Desc = "Loading Game Info...\nPlace ID: " .. tostring(game.PlaceId) .. "\nPlayers: " .. tostring(playerCount) .. " / " .. tostring(maxPlayers) .. "\nJob ID: " .. tostring(game.JobId),
+                Image = "rbxassetid://10111160350", -- Alternate sleek fluid/tech background
+                ImageColor = Color3.fromRGB(80, 150, 255)
+            })
+            
+            task.spawn(function()
+                local gName = "Unknown Game"
+                pcall(function()
+                    gName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+                end)
+                if serverCard and serverCard.Desc then
+                    serverCard.Desc.Text = "Game: " .. tostring(gName) .. "\nPlace ID: " .. tostring(game.PlaceId) .. "\nPlayers: " .. tostring(playerCount) .. " / " .. tostring(maxPlayers) .. "\nJob ID: " .. tostring(game.JobId)
+                end
+            end)
+            
+            -- Full Width Card for Discord
+            HomeTab:AddDashboardFullCard({
+                Title = "Join the Community",
+                Desc = "Stay updated on the latest scripts, get support, and talk to other exploiters!\nLink: discord.gg/rosehub",
+                Image = "rbxassetid://10459521360", 
+                ImageColor = Color3.fromRGB(80, 100, 240) -- Bluish Discord-like tone
             })
         end)
         if not success then
