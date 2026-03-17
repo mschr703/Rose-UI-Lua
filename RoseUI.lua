@@ -854,19 +854,27 @@ function RoseUI:CreateWindow(options)
     -- USER PROFILE AREA (Sidebar Unten Links)
     -- ==========================================
     local profileFrame = Instance.new("Frame")
-    profileFrame.Size = UDim2.new(1, -10, 0, 50)
-    profileFrame.Position = UDim2.new(0, 5, 1, -65)
-    profileFrame.BackgroundTransparency = 1 
+    profileFrame.Size = UDim2.new(1, -16, 0, 44)
+    profileFrame.Position = UDim2.new(0, 8, 1, -55)
+    profileFrame.BackgroundColor3 = Color3.fromRGB(25, 18, 30)
+    profileFrame.BackgroundTransparency = 0.4
     profileFrame.ZIndex = 3
     profileFrame.Parent = sidebarFrame
+    Instance.new("UICorner", profileFrame).CornerRadius = UDim.new(1, 0) -- Perfect Pill Shape
+
+    local profileStroke = Instance.new("UIStroke")
+    profileStroke.Color = Color3.fromRGB(120, 90, 150)
+    profileStroke.Transparency = 0.6
+    profileStroke.Thickness = 1
+    profileStroke.Parent = profileFrame
 
     local localPlayer = game:GetService("Players").LocalPlayer
     local pName = localPlayer and localPlayer.Name or "Guest"
     local pId = localPlayer and localPlayer.UserId or 1
     
     local avatarImg = Instance.new("ImageLabel")
-    avatarImg.Size = UDim2.new(0, 32, 0, 32)
-    avatarImg.Position = UDim2.new(0, 4, 0.5, -16)
+    avatarImg.Size = UDim2.new(0, 30, 0, 30)
+    avatarImg.Position = UDim2.new(0, 7, 0.5, -15)
     avatarImg.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
     avatarImg.BackgroundTransparency = 1
     avatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. pId .. "&w=150&h=150"
@@ -881,28 +889,28 @@ function RoseUI:CreateWindow(options)
     avatarStroke.Parent = avatarImg
     
     local nameLbl = Instance.new("TextLabel")
-    nameLbl.Size = UDim2.new(1, -45, 0, 15)
-    nameLbl.Position = UDim2.new(0, 42, 0, 10)
+    nameLbl.Size = UDim2.new(1, -45, 0, 14)
+    nameLbl.Position = UDim2.new(0, 44, 0, 8)
     nameLbl.BackgroundTransparency = 1
     nameLbl.Text = pName
     nameLbl.TextColor3 = TEXT_COLOR
     nameLbl.TextTransparency = 1
     nameLbl.Font = Enum.Font.GothamMedium
-    nameLbl.TextSize = 12
+    nameLbl.TextSize = 11
     nameLbl.TextXAlignment = Enum.TextXAlignment.Left
     nameLbl.ZIndex = 4
     nameLbl.Parent = profileFrame
     table.insert(sidebarElements.labels, nameLbl)
 
     local rankLbl = Instance.new("TextLabel")
-    rankLbl.Size = UDim2.new(1, -45, 0, 15)
-    rankLbl.Position = UDim2.new(0, 42, 0, 25)
+    rankLbl.Size = UDim2.new(1, -45, 0, 14)
+    rankLbl.Position = UDim2.new(0, 44, 0, 22)
     rankLbl.BackgroundTransparency = 1
     rankLbl.Text = "Free User"
     rankLbl.TextColor3 = HEADER_COLOR
     rankLbl.TextTransparency = 1
     rankLbl.Font = Enum.Font.Gotham
-    rankLbl.TextSize = 10
+    rankLbl.TextSize = 9
     rankLbl.TextXAlignment = Enum.TextXAlignment.Left
     rankLbl.ZIndex = 4
     rankLbl.Parent = profileFrame
@@ -1411,13 +1419,15 @@ function RoseUI:CreateWindow(options)
                 bTitle.Parent = bannerCard
                 
                 local bDesc = Instance.new("TextLabel")
-                bDesc.Size = UDim2.new(1, -20, 0, 15)
+                bDesc.Size = UDim2.new(1, -20, 0, 30)
                 bDesc.Position = UDim2.new(0, 15, 0, 45)
                 bDesc.BackgroundTransparency = 1
                 bDesc.Text = rowOptions.Banner.Desc or "Description"
                 bDesc.TextColor3 = Color3.fromRGB(200, 180, 220)
                 bDesc.Font = Enum.Font.Gotham
                 bDesc.TextSize = 12
+                bDesc.TextWrapped = true
+                bDesc.TextYAlignment = Enum.TextYAlignment.Top
                 bDesc.TextXAlignment = Enum.TextXAlignment.Left
                 bDesc.ZIndex = 12
                 bDesc.Parent = bannerCard
@@ -5104,6 +5114,17 @@ end
             local dayOfWeek = os.date("%A")
             local userRole = "Free User" -- Placeholder, could be integrated with your own auth
             
+            local keyTimeStr = "Developer / Lifetime"
+            pcall(function()
+                if type(LRM_SecondsLeft) == "number" then
+                    if LRM_SecondsLeft > 0 and LRM_SecondsLeft < 315360000 then -- If less than 10 years, it's not a lifetime key
+                        local hours = math.floor(LRM_SecondsLeft / 3600)
+                        local minutes = math.floor((LRM_SecondsLeft % 3600) / 60)
+                        keyTimeStr = tostring(hours) .. "h " .. tostring(minutes) .. "m"
+                    end
+                end
+            end)
+            
             local eNameLower = string.lower(execName)
             local score = 3
             if string.find(eNameLower, "volt") then score = 10 
@@ -5133,7 +5154,7 @@ end
             HomeTab:AddDashboardRow({
                 Banner = {
                     Title = "Welcome, " .. pName,
-                    Desc = "Role: " .. userRole,
+                    Desc = "Role: " .. userRole .. "\nKey Time: " .. keyTimeStr,
                     Image = "rbxassetid://10459521360" -- Cool fluid purple texture
                 },
                 Ring = {
