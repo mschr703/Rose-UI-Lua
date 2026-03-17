@@ -796,25 +796,25 @@ function RoseUI:CreateWindow(options)
     -- Scroll Indicators
     local scrollUpInd = Instance.new("TextLabel")
     scrollUpInd.Size = UDim2.new(0, 16, 0, 16)
-    scrollUpInd.Position = UDim2.new(0.5, -8, 0, 2)
+    scrollUpInd.Position = UDim2.new(0.5, -8, 0, 6)
     scrollUpInd.BackgroundTransparency = 1
     scrollUpInd.Text = "▲"
-    scrollUpInd.TextColor3 = Color3.fromRGB(220, 20, 40) -- Made red per user request
+    scrollUpInd.TextColor3 = Color3.fromRGB(255, 60, 60) -- Prominent red
     scrollUpInd.TextTransparency = 1
     scrollUpInd.Font = Enum.Font.GothamBold
-    scrollUpInd.TextSize = 14
+    scrollUpInd.TextSize = 20
     scrollUpInd.ZIndex = 4
     scrollUpInd.Parent = sidebarFrame
 
     local scrollDownInd = Instance.new("TextLabel")
     scrollDownInd.Size = UDim2.new(0, 16, 0, 16)
-    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -85) -- Moved further down
+    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -100) -- Moved back up slightly
     scrollDownInd.BackgroundTransparency = 1
     scrollDownInd.Text = "▼"
-    scrollDownInd.TextColor3 = Color3.fromRGB(220, 20, 40) -- Made red per user request
+    scrollDownInd.TextColor3 = Color3.fromRGB(255, 60, 60) -- Prominent red
     scrollDownInd.TextTransparency = 1
     scrollDownInd.Font = Enum.Font.GothamBold
-    scrollDownInd.TextSize = 14
+    scrollDownInd.TextSize = 20
     scrollDownInd.ZIndex = 4
     scrollDownInd.Parent = sidebarFrame
     
@@ -1076,7 +1076,7 @@ function RoseUI:CreateWindow(options)
         tabBtn.Parent = tabContainer
         Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
         
-        if (#WindowObj.Tabs > 0 or forceSeparator) and not noSeparator then
+        if (#WindowObj.Tabs > 1 or forceSeparator) and not noSeparator then
             local sepLine = Instance.new("Frame")
             sepLine.Size = UDim2.new(1, -20, 0, 1)
             sepLine.Position = UDim2.new(0, 10, 0, -6) -- Centered perfectly in the 12px gap
@@ -4866,6 +4866,15 @@ end
             homeSpacer.BackgroundTransparency = 1
             homeSpacer.LayoutOrder = 0
             homeSpacer.Parent = tabContainer
+            
+            local homeLine = Instance.new("Frame")
+            homeLine.Size = UDim2.new(1, -20, 0, 1)
+            homeLine.Position = UDim2.new(0, 10, 0, 41) -- Below the Home button in the gap
+            homeLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            homeLine.BackgroundTransparency = 0.95
+            homeLine.BorderSizePixel = 0
+            homeLine.ZIndex = 4
+            homeLine.Parent = HomeTab.Btn
             
             local execName = "Unknown Executor"
             pcall(function()
