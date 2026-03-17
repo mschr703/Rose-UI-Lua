@@ -499,10 +499,10 @@ function RoseUI:CreateWindow(options)
         btn.MouseLeave:Connect(function() tweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
         return btn
     end
-    local closeBtn = createControlBtn("", 0)
+    local homeBtn = createControlBtn("", 0)
     local maxBtn = createControlBtn("", 1)
     local minBtn = createControlBtn("-", 2)
-    local homeBtn = createControlBtn("", 3)
+    local closeBtn = createControlBtn("", 3)
     if options.HideDefaultTabs then
         homeBtn.Visible = false
     end
@@ -4797,6 +4797,16 @@ end
             if RoseUI.Init then RoseUI:Init() end
         end)
     end)
+
+    if not options.HideDefaultTabs then
+        local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png"})
+        
+        local execName = identifyexecutor and identifyexecutor() or "Unknown Executor"
+        local pName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Guest"
+        
+        HomeTab:AddLabel("👋 Hello, " .. pName .. "!")
+        HomeTab:AddLabel("You are currently using: " .. execName)
+    end
 
     return WindowObj
 end
