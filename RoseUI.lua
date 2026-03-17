@@ -799,7 +799,7 @@ function RoseUI:CreateWindow(options)
     scrollUpInd.Position = UDim2.new(0.5, -8, 0, 2)
     scrollUpInd.BackgroundTransparency = 1
     scrollUpInd.Text = "▲"
-    scrollUpInd.TextColor3 = Color3.fromRGB(150, 150, 150)
+    scrollUpInd.TextColor3 = Color3.fromRGB(220, 20, 40) -- Made red per user request
     scrollUpInd.TextTransparency = 1
     scrollUpInd.Font = Enum.Font.GothamBold
     scrollUpInd.TextSize = 14
@@ -808,10 +808,10 @@ function RoseUI:CreateWindow(options)
 
     local scrollDownInd = Instance.new("TextLabel")
     scrollDownInd.Size = UDim2.new(0, 16, 0, 16)
-    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -112)
+    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -85) -- Moved further down
     scrollDownInd.BackgroundTransparency = 1
     scrollDownInd.Text = "▼"
-    scrollDownInd.TextColor3 = Color3.fromRGB(150, 150, 150)
+    scrollDownInd.TextColor3 = Color3.fromRGB(220, 20, 40) -- Made red per user request
     scrollDownInd.TextTransparency = 1
     scrollDownInd.Font = Enum.Font.GothamBold
     scrollDownInd.TextSize = 14
@@ -4859,12 +4859,12 @@ end
 
     if not options.HideDefaultTabs then
         local success, err = pcall(function()
-            local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png"})
+            local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png", LayoutOrder = -1})
             
             local homeSpacer = Instance.new("Frame")
             homeSpacer.Size = UDim2.new(1, 0, 0, 35)
             homeSpacer.BackgroundTransparency = 1
-            homeSpacer.LayoutOrder = 1
+            homeSpacer.LayoutOrder = 0
             homeSpacer.Parent = tabContainer
             
             local execName = "Unknown Executor"
