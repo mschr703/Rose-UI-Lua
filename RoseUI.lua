@@ -794,23 +794,27 @@ function RoseUI:CreateWindow(options)
     tabLayout.Padding = UDim.new(0, 12) -- Larger Gap between tabs and lines
 
     -- Scroll Indicators
-    local scrollUpInd = Instance.new("ImageLabel")
+    local scrollUpInd = Instance.new("TextLabel")
     scrollUpInd.Size = UDim2.new(0, 16, 0, 16)
     scrollUpInd.Position = UDim2.new(0.5, -8, 0, 2)
     scrollUpInd.BackgroundTransparency = 1
-    scrollUpInd.Image = "rbxasset://textures/ui/Scroll/scroll-up.png"
-    scrollUpInd.ImageColor3 = Color3.fromRGB(200, 200, 200)
-    scrollUpInd.ImageTransparency = 1
+    scrollUpInd.Text = "▲"
+    scrollUpInd.TextColor3 = Color3.fromRGB(150, 150, 150)
+    scrollUpInd.TextTransparency = 1
+    scrollUpInd.Font = Enum.Font.GothamBold
+    scrollUpInd.TextSize = 14
     scrollUpInd.ZIndex = 4
     scrollUpInd.Parent = sidebarFrame
 
-    local scrollDownInd = Instance.new("ImageLabel")
+    local scrollDownInd = Instance.new("TextLabel")
     scrollDownInd.Size = UDim2.new(0, 16, 0, 16)
-    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -108)
+    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -112)
     scrollDownInd.BackgroundTransparency = 1
-    scrollDownInd.Image = "rbxasset://textures/ui/Scroll/scroll-down.png"
-    scrollDownInd.ImageColor3 = Color3.fromRGB(200, 200, 200)
-    scrollDownInd.ImageTransparency = 1
+    scrollDownInd.Text = "▼"
+    scrollDownInd.TextColor3 = Color3.fromRGB(150, 150, 150)
+    scrollDownInd.TextTransparency = 1
+    scrollDownInd.Font = Enum.Font.GothamBold
+    scrollDownInd.TextSize = 14
     scrollDownInd.ZIndex = 4
     scrollDownInd.Parent = sidebarFrame
     
@@ -821,25 +825,30 @@ function RoseUI:CreateWindow(options)
         
         if contentY > windowY then
             if cPos > 5 then
-                tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {ImageTransparency = 0.5}):Play()
+                tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {TextTransparency = 0.5}):Play()
             else
-                tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+                tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
             end
             
             if cPos + windowY < contentY - 5 then
-                tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {ImageTransparency = 0.5}):Play()
+                tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {TextTransparency = 0.5}):Play()
             else
-                tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+                tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
             end
         else
-            tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
-            tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+            tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+            tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
         end
     end
 
     tabContainer:GetPropertyChangedSignal("CanvasPosition"):Connect(updateScrollIndicators)
     tabContainer:GetPropertyChangedSignal("CanvasSize"):Connect(updateScrollIndicators)
     tabContainer:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(updateScrollIndicators)
+    
+    tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        tabContainer.CanvasSize = UDim2.new(0, 0, 0, tabLayout.AbsoluteContentSize.Y + 20)
+        updateScrollIndicators()
+    end)
 
     -- ==========================================
     -- USER PROFILE AREA (Sidebar Unten Links)
@@ -1254,7 +1263,9 @@ function RoseUI:CreateWindow(options)
         
         table.insert(WindowObj.Tabs, {Btn = tabBtn, Page = page, Lbl = tabLabel, Img = tabIconImg, TxtIcon = tabIconText})
         
-        local TabObj = {}
+        local TabObj = {
+            Btn = tabBtn
+        }
         
         -- 0. SECTION
         function TabObj:AddSection(sName)
