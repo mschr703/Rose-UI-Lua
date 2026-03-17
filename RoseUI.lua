@@ -4317,8 +4317,11 @@ local END_HOLD = 0.6
 
 
 
-local introBg = Instance.new("Frame")
-introBg.Size = UDim2.new(1, 0, 1, 0)
+if not _G.RoseUI_IntroPlayed then
+    _G.RoseUI_IntroPlayed = true
+
+    local introBg = Instance.new("Frame")
+    introBg.Size = UDim2.new(1, 0, 1, 0)
 introBg.BackgroundColor3 = Color3.fromRGB(12, 8, 12)
 introBg.BackgroundTransparency = 1 -- Start fully transparent
 introBg.ZIndex = 999
@@ -4777,7 +4780,15 @@ task.spawn(function()
         local pName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Guest"
         RoseUI:Notify({Title = "🌹 Welcome, " .. pName .. "!", Text = "Successfully loaded " .. titleText .. ". Enjoy!", Duration = 5})
 
-end)
+    end)
+else
+    -- Skip the intro entirely, but still open the window and notify!
+    dragFrame.Size = DEFAULT_SIZE
+    dragFrame.ClipsDescendants = false
+    
+    local pName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Guest"
+    RoseUI:Notify({Title = "🌹 Welcome, " .. pName .. "!", Text = "Successfully loaded " .. titleText .. ". Enjoy!", Duration = 5})
+end
     -- AUTOMATIC AUTOLOADER:
     -- Wait 2 seconds for the user's script to finish building all their Tabs and Elements, then inject the saved configs natively.
     task.spawn(function()
