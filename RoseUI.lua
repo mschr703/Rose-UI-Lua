@@ -1187,6 +1187,12 @@ function RoseUI:CreateWindow(options)
                         if s and d then writefile(path, d) end
                     end
                     if isfile(path) then tabIconImg.Image = getasset(path) end
+                else
+                    if emojiIcon then
+                        tabIconImg.Visible = false
+                        tabIconText.Visible = true
+                        tabIconText.Text = emojiIcon
+                    end
                 end
             end)
         else
@@ -5308,9 +5314,13 @@ end
             local dayOfWeek = os.date("%A")
             local userRole = "Free User"
             pcall(function()
-                if type(LRM_UserNote) == "string" and LRM_UserNote ~= "" and LRM_UserNote ~= "Ad Reward" then
-                    userRole = LRM_UserNote
-                elseif type(LRM_IsUserPremium) == "boolean" and LRM_IsUserPremium == true then
+                local g = getgenv and getgenv() or _G
+                local note = g.ROSE_LRM_UserNote or LRM_UserNote
+                local isPrem = g.ROSE_LRM_IsUserPremium or LRM_IsUserPremium
+                
+                if type(note) == "string" and note ~= "" and note ~= "Ad Reward" and note ~= "Not specified" then
+                    userRole = note
+                elseif type(isPrem) == "boolean" and isPrem == true then
                     userRole = "Premium User"
                 end
             end)
@@ -5324,23 +5334,26 @@ end
             
             local totalExecs = "0"
             pcall(function()
-                if type(LRM_TotalExecutions) == "number" then
-                    totalExecs = tostring(LRM_TotalExecutions)
+                local tExecs = (getgenv and getgenv().ROSE_LRM_TotalExecutions) or LRM_TotalExecutions
+                if type(tExecs) == "number" then
+                    totalExecs = tostring(tExecs)
                 end
             end)
             
             local scriptVer = "Developer Build"
             pcall(function()
-                if type(LRM_ScriptVersion) == "string" and LRM_ScriptVersion ~= "" then
-                    scriptVer = LRM_ScriptVersion
+                local sVer = (getgenv and getgenv().ROSE_LRM_ScriptVersion) or LRM_ScriptVersion
+                if type(sVer) == "string" and sVer ~= "" then
+                    scriptVer = sVer
                 end
             end)
             local keyTimeStr = "Lifetime"
             pcall(function()
-                if type(LRM_SecondsLeft) == "number" then
-                    if LRM_SecondsLeft > 0 and LRM_SecondsLeft < 315360000 then -- If less than 10 years, it's not a lifetime key
-                        local hours = math.floor(LRM_SecondsLeft / 3600)
-                        local minutes = math.floor((LRM_SecondsLeft % 3600) / 60)
+                local sLeft = (getgenv and getgenv().ROSE_LRM_SecondsLeft) or LRM_SecondsLeft
+                if type(sLeft) == "number" then
+                    if sLeft > 0 and sLeft < 315360000 then -- If less than 10 years, it's not a lifetime key
+                        local hours = math.floor(sLeft / 3600)
+                        local minutes = math.floor((sLeft % 3600) / 60)
                         keyTimeStr = tostring(hours) .. "h " .. tostring(minutes) .. "m"
                     end
                 end
