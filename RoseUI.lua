@@ -804,49 +804,7 @@ function RoseUI:CreateWindow(options)
     sidebarFrame.ZIndex = 2
     sidebarFrame.Parent = bodyContainer
 
-    local fpsLabel = Instance.new("TextLabel")
-    fpsLabel.Size = UDim2.new(1, 0, 0, 50)
-    fpsLabel.Position = UDim2.new(0, 0, 0, 5)
-    fpsLabel.BackgroundTransparency = 1
-    fpsLabel.Text = "🌹 FPS: 60"
-    fpsLabel.TextColor3 = HEADER_COLOR
-    fpsLabel.TextTransparency = 1
-    fpsLabel.Font = Enum.Font.GothamBold
-    fpsLabel.TextSize = 13
-    fpsLabel.ZIndex = 3
-    fpsLabel.Parent = sidebarFrame
-    table.insert(sidebarElements.labels, fpsLabel)
-    
-    local fpsStroke = Instance.new("UIStroke")
-    fpsStroke.Color = Color3.fromRGB(0, 0, 0)
-    fpsStroke.Transparency = 0.5
-    fpsStroke.Thickness = 1
-    fpsStroke.Parent = fpsLabel
-    
-    local sec = tick()
-    local frames = 0
-    local fpsConn = game:GetService("RunService").RenderStepped:Connect(function()
-        frames = frames + 1
-        if tick() - sec >= 1 then
-            if fpsLabel.Parent then
-                fpsLabel.Text = "🌹 FPS: " .. frames
-            else
-                return -- Cleanup will handle disconnect
-            end
-            frames = 0
-            sec = tick()
-        end
-    end)
-    table.insert(_G.RoseUI_Connections, fpsConn)
-    
-    local separator = Instance.new("Frame")
-    separator.Size = UDim2.new(0, 1, 1, -20)
-    separator.Position = UDim2.new(1, -1, 0, 10)
-    separator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    separator.BackgroundTransparency = 0.9
-    separator.BorderSizePixel = 0
-    separator.ZIndex = 3
-    separator.Parent = sidebarFrame
+    -- FPS Label and Separator removed by user request
 
     local tabContainer = Instance.new("ScrollingFrame")
     tabContainer.Size = UDim2.new(1, -10, 1, -115) -- Mehr Platz fuer das Profil unten lassen
@@ -885,8 +843,8 @@ function RoseUI:CreateWindow(options)
     local pId = localPlayer and localPlayer.UserId or 1
     
     local avatarImg = Instance.new("ImageLabel")
-    avatarImg.Size = UDim2.new(0, 36, 0, 36)
-    avatarImg.Position = UDim2.new(0, 7, 0.5, -18)
+    avatarImg.Size = UDim2.new(0, 30, 0, 30)
+    avatarImg.Position = UDim2.new(0, 5, 0.5, -15)
     avatarImg.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
     avatarImg.BackgroundTransparency = 0.5
     avatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. pId .. "&w=150&h=150"
@@ -901,8 +859,8 @@ function RoseUI:CreateWindow(options)
     avatarStroke.Parent = avatarImg
     
     local nameLbl = Instance.new("TextLabel")
-    nameLbl.Size = UDim2.new(1, -55, 0, 15)
-    nameLbl.Position = UDim2.new(0, 48, 0, 10)
+    nameLbl.Size = UDim2.new(1, -45, 0, 15)
+    nameLbl.Position = UDim2.new(0, 42, 0, 10)
     nameLbl.BackgroundTransparency = 1
     nameLbl.Text = pName
     nameLbl.TextColor3 = TEXT_COLOR
@@ -915,8 +873,8 @@ function RoseUI:CreateWindow(options)
     table.insert(sidebarElements.labels, nameLbl)
 
     local rankLbl = Instance.new("TextLabel")
-    rankLbl.Size = UDim2.new(1, -55, 0, 15)
-    rankLbl.Position = UDim2.new(0, 48, 0, 25)
+    rankLbl.Size = UDim2.new(1, -45, 0, 15)
+    rankLbl.Position = UDim2.new(0, 42, 0, 25)
     rankLbl.BackgroundTransparency = 1
     rankLbl.Text = "Free User"
     rankLbl.TextColor3 = HEADER_COLOR
@@ -1109,7 +1067,7 @@ function RoseUI:CreateWindow(options)
         
         local tabIconImg = Instance.new("ImageLabel")
         tabIconImg.Size = UDim2.new(0, 14, 0, 14)
-        tabIconImg.Position = UDim2.new(0, 18, 0.5, -7)
+        tabIconImg.Position = UDim2.new(0, 13, 0.5, -7)
         tabIconImg.BackgroundTransparency = 1
         tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconImg.ZIndex = 5
@@ -1117,7 +1075,7 @@ function RoseUI:CreateWindow(options)
 
         local tabIconText = Instance.new("TextLabel")
         tabIconText.Size = UDim2.new(0, 14, 0, 14)
-        tabIconText.Position = UDim2.new(0, 18, 0.5, -7)
+        tabIconText.Position = UDim2.new(0, 13, 0.5, -7)
         tabIconText.BackgroundTransparency = 1
         tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconText.Font = Enum.Font.GothamBold
@@ -1141,8 +1099,8 @@ function RoseUI:CreateWindow(options)
             tabIconImg.Visible = false
             tabIconText.Visible = true
             tabIconText.Text = emojiIcon
-            tabLabel.Size = UDim2.new(1, -38, 1, 0)
-            tabLabel.Position = UDim2.new(0, 38, 0, 0)
+            tabLabel.Size = UDim2.new(1, -33, 1, 0)
+            tabLabel.Position = UDim2.new(0, 33, 0, 0)
         elseif tabIcon == "" then
             tabIconImg.Visible = false
             tabIconText.Visible = false
@@ -1151,13 +1109,13 @@ function RoseUI:CreateWindow(options)
         elseif string.match(tabIcon, "rbxassetid://") then
             tabIconImg.Image = tabIcon
             tabIconText.Visible = false
-            tabLabel.Size = UDim2.new(1, -38, 1, 0)
-            tabLabel.Position = UDim2.new(0, 38, 0, 0)
+            tabLabel.Size = UDim2.new(1, -33, 1, 0)
+            tabLabel.Position = UDim2.new(0, 33, 0, 0)
         elseif string.match(tabIcon, "%.png") or string.match(tabIcon, "http") then
             tabIconImg.Image = ""
             tabIconText.Visible = false
-            tabLabel.Size = UDim2.new(1, -38, 1, 0)
-            tabLabel.Position = UDim2.new(0, 38, 0, 0)
+            tabLabel.Size = UDim2.new(1, -33, 1, 0)
+            tabLabel.Position = UDim2.new(0, 33, 0, 0)
             
             task.spawn(function()
                 local getasset = select(2, pcall(function() return getcustomasset and getcustomasset or (getgenv and getgenv().getcustomasset) end))
@@ -1182,8 +1140,8 @@ function RoseUI:CreateWindow(options)
         else
             tabIconImg.Visible = false
             tabIconText.Text = tabIcon
-            tabLabel.Size = UDim2.new(1, -38, 1, 0)
-            tabLabel.Position = UDim2.new(0, 38, 0, 0)
+            tabLabel.Size = UDim2.new(1, -33, 1, 0)
+            tabLabel.Position = UDim2.new(0, 33, 0, 0)
         end
         
         local page = Instance.new("ScrollingFrame")
