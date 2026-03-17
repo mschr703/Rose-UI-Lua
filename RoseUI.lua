@@ -1408,7 +1408,7 @@ function RoseUI:CreateWindow(options)
             -- Left Banner
             if rowOptions.Banner then
                 local bannerCard = Instance.new("Frame")
-                bannerCard.Size = UDim2.new(0.5, -5, 1, 0)
+                bannerCard.Size = UDim2.new(0.5, -6, 1, 0)
                 bannerCard.BackgroundColor3 = Color3.fromRGB(30, 15, 25)
                 bannerCard.ClipsDescendants = true
                 bannerCard.ZIndex = 11
@@ -1463,7 +1463,7 @@ function RoseUI:CreateWindow(options)
             -- Right Banner 2
             if rowOptions.Banner2 then
                 local bannerCard2 = Instance.new("Frame")
-                bannerCard2.Size = UDim2.new(0.5, -5, 1, 0)
+                bannerCard2.Size = UDim2.new(0.5, -6, 1, 0)
                 bannerCard2.BackgroundColor3 = Color3.fromRGB(30, 15, 25)
                 bannerCard2.ClipsDescendants = true
                 bannerCard2.ZIndex = 11
@@ -1518,7 +1518,7 @@ function RoseUI:CreateWindow(options)
             -- Right Ring Card
             if rowOptions.Ring then
                 local ringCard = Instance.new("Frame")
-                ringCard.Size = UDim2.new(0.5, -5, 1, 0)
+                ringCard.Size = UDim2.new(0.5, -6, 1, 0)
                 ringCard.BackgroundColor3 = CARD_COLOR
                 ringCard.ZIndex = 11
                 ringCard.Parent = rowFrame
