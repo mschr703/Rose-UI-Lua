@@ -503,7 +503,7 @@ function RoseUI:CreateWindow(options)
     local maxBtn = createControlBtn("", 1)
     local minBtn = createControlBtn("-", 2)
     local homeBtn = createControlBtn("", 3)
-    if Settings.HideDefaultTabs then
+    if options.HideDefaultTabs then
         homeBtn.Visible = false
     end
     
