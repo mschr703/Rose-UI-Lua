@@ -4266,8 +4266,26 @@ function RoseUI:CreateWindow(options)
                     joinBtn.MouseButton1Click:Connect(function()
                         ctxBg:Destroy()
                         if itemData.PlaceId then
+                            local gameLink = "https://www.roblox.com/games/" .. tostring(itemData.PlaceId)
                             RoseUI:Notify({Title = "🎮 Teleporting", Text = "Joining " .. tostring(itemData.Name) .. "...", Duration = 3})
-                            game:GetService("TeleportService"):Teleport(itemData.PlaceId, game:GetService("Players").LocalPlayer)
+                            
+                            -- Fallback: Copy link to clipboard in case teleport is restricted
+                            if setclipboard then
+                                setclipboard(gameLink)
+                            end
+                            
+                            local success, err = pcall(function()
+                                game:GetService("TeleportService"):Teleport(itemData.PlaceId, game:GetService("Players").LocalPlayer)
+                            end)
+                            
+                            if not success then
+                                RoseUI:Notify({Title = "⚠️ Restricted", Text = "Game blocks teleports! Link copied to clipboard.", Duration = 5})
+                            else
+                                -- Give it a moment, sometimes the error is asynchronous.
+                                task.delay(1.5, function()
+                                    RoseUI:Notify({Title = "⚠️ Info", Text = "If you didn't teleport, the game restricts it. Link copied!", Duration = 5})
+                                end)
+                            end
                         else
                             RoseUI:Notify({Title = "⚠️ Error", Text = "No PlaceId provided for this game.", Duration = 3})
                         end
