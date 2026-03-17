@@ -826,27 +826,19 @@ function RoseUI:CreateWindow(options)
     local profileFrame = Instance.new("Frame")
     profileFrame.Size = UDim2.new(1, -10, 0, 50)
     profileFrame.Position = UDim2.new(0, 5, 1, -55)
-    profileFrame.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
-    profileFrame.BackgroundTransparency = 0.5 -- Fits into the glass look
+    profileFrame.BackgroundTransparency = 1 
     profileFrame.ZIndex = 3
     profileFrame.Parent = sidebarFrame
-    Instance.new("UICorner", profileFrame).CornerRadius = UDim.new(0, 8)
-    
-    local pStroke = Instance.new("UIStroke")
-    pStroke.Color = HEADER_COLOR
-    pStroke.Transparency = 0.7
-    pStroke.Thickness = 1
-    pStroke.Parent = profileFrame
 
     local localPlayer = game:GetService("Players").LocalPlayer
     local pName = localPlayer and localPlayer.Name or "Guest"
     local pId = localPlayer and localPlayer.UserId or 1
     
     local avatarImg = Instance.new("ImageLabel")
-    avatarImg.Size = UDim2.new(0, 30, 0, 30)
-    avatarImg.Position = UDim2.new(0, 5, 0.5, -15)
+    avatarImg.Size = UDim2.new(0, 32, 0, 32)
+    avatarImg.Position = UDim2.new(0, 4, 0.5, -16)
     avatarImg.BackgroundColor3 = Color3.fromRGB(15, 12, 18)
-    avatarImg.BackgroundTransparency = 0.5
+    avatarImg.BackgroundTransparency = 1
     avatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. pId .. "&w=150&h=150"
     avatarImg.ZIndex = 4
     avatarImg.Parent = profileFrame
@@ -1066,16 +1058,16 @@ function RoseUI:CreateWindow(options)
         end
         
         local tabIconImg = Instance.new("ImageLabel")
-        tabIconImg.Size = UDim2.new(0, 14, 0, 14)
-        tabIconImg.Position = UDim2.new(0, 13, 0.5, -7)
+        tabIconImg.Size = UDim2.new(0, 16, 0, 16)
+        tabIconImg.Position = UDim2.new(0, 12, 0.5, -8) -- Centered perfectly in 40px width
         tabIconImg.BackgroundTransparency = 1
         tabIconImg.ImageColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconImg.ZIndex = 5
         tabIconImg.Parent = tabBtn
 
         local tabIconText = Instance.new("TextLabel")
-        tabIconText.Size = UDim2.new(0, 14, 0, 14)
-        tabIconText.Position = UDim2.new(0, 13, 0.5, -7)
+        tabIconText.Size = UDim2.new(0, 16, 0, 16)
+        tabIconText.Position = UDim2.new(0, 12, 0.5, -8)
         tabIconText.BackgroundTransparency = 1
         tabIconText.TextColor3 = Color3.fromRGB(255, 255, 255) -- White Icons
         tabIconText.Font = Enum.Font.GothamBold
@@ -4314,12 +4306,12 @@ local OUTLINE_COLOR = Color3.fromHex("#5a0000") -- Darker red for the stroke out
 local GLOW_COLOR = Color3.fromRGB(220, 0, 0) -- Pure bright red for aura
 local GLOW_SPREAD = 45 -- How much wider than the text the glow aura reaches
 local GLOW_OPACITY = 0.88 -- Very transparent particles stacked to form organic glow
-local STROKE_THICKNESS = 21
+local STROKE_THICKNESS = 16 -- Much thinner core text to fully open all intrinsic loops
 local BRUSH_STEP = 1
-local SEGMENT_WAIT_EVERY = 18
-local SIMPLIFY_SKIP = 2
+local SEGMENT_WAIT_EVERY = 18 -- Slightly faster drawing
+local SIMPLIFY_SKIP = 2 -- Lower skip -> smoother curves, less lumpiness
 local START_DELAY = 0.35
-local END_HOLD = 1.35
+local END_HOLD = 0.6
 
 -- screenGui from RoseUI
 
@@ -4508,7 +4500,7 @@ local fitScale = math.min(
     (CANVAS_SIZE.X - CANVAS_PADDING * 2) / width,
     (CANVAS_SIZE.Y - CANVAS_PADDING * 2) / height
 )
-local stretchX = 1.15 -- Stretch text horizontally by 15% to give loops breathing room
+local stretchX = 1.22 -- Stretch text horizontally heavily to keep cursive loops readable
 local scaledWidth = width * fitScale * stretchX
 local offsetX = (CANVAS_SIZE.X - scaledWidth) * 0.5
 local offsetY = (CANVAS_SIZE.Y - height * fitScale) * 0.5
@@ -4537,9 +4529,9 @@ for pathIndex, path in ipairs(orderedPaths) do
     for i, p in ipairs(path) do
         local finalP = p
         if isO then
-            -- Scale the 'o' radially outward from its center by 1.3x 
-            -- to keep it completely hollow regardless of the thickness
-            finalP = Vector2.new(o_cy + (p.X - o_cy) * 1.3, o_cy + (p.Y - o_cy) * 1.4)
+            -- Scale small loop letters outward from their individual independent centers
+            -- This keeps 'o', 's', and 'e' geometrically hollow without displacing them
+            finalP = Vector2.new(o_cy + (p.X - o_cy) * 1.35, o_cy + (p.Y - o_cy) * 1.45)
         end
         transformed[i] = transformPoint(finalP)
     end
@@ -4674,13 +4666,10 @@ task.spawn(function()
     -- 2. Draw the cursive text (Base Text First)
     local segmentCounter = 0
     local baseThickness = math.max(2, math.floor(STROKE_THICKNESS * fitScale * 1.0))
-    local shadowThickness = baseThickness + 4 -- 2 pixels outline on each side to prevent aliasing
-    local glowThickness = shadowThickness + GLOW_SPREAD
+    local shadowThickness = baseThickness + 10 -- Massive 5px border on both sides retains exact overall visual blob width while core stays thin
     local lastEnd = nil
     
     local outlineFrames = {}
-    local glowFrames = {}
-    
     local function addOutline(obj1, obj2)
         if obj1 then outlineFrames[#outlineFrames + 1] = obj1 end
         if obj2 then outlineFrames[#outlineFrames + 1] = obj2 end
@@ -4728,12 +4717,22 @@ task.spawn(function()
             local maxDim = math.max(w, h, 80)
             
             -- Deep wide crimson aura (Outer Bloom) - Natively stacked!
-            createConcentricGlow(cx, cy, maxDim * 2.8 + 100, Color3.fromHex("#a00000"), 998, drawFolder, 0.94, 14, ambientGlows)
+            createConcentricGlow(cx, cy, maxDim * 2.8 + 100, Color3.fromHex("#a00000"), 998, drawFolder, 0.98, 14, ambientGlows)
 
             -- Brighter neon core (Inner Bloom) - Natively stacked!
-            createConcentricGlow(cx, cy, maxDim * 1.8 + 40, Color3.fromHex("#ff0000"), 999, drawFolder, 0.88, 10, ambientGlows)
+            createConcentricGlow(cx, cy, maxDim * 1.8 + 40, Color3.fromHex("#ff0000"), 999, drawFolder, 0.94, 10, ambientGlows)
         end
-        
+    end
+    
+    -- Start the glow fade-in IMMEDIATELY, taking 2.5 seconds to slowly bloom behind the drawing text
+    task.spawn(function()
+        for _, glowData in ipairs(ambientGlows) do
+            tweenService:Create(glowData.obj, TweenInfo.new(2.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), { BackgroundTransparency = glowData.target }):Play()
+        end
+    end)
+    
+    -- PASS: Main Fill & Invisible Outline Generated Concurrently
+    for _, path in ipairs(transformedPaths) do
         if #path > 0 then
             makeCircle(path[1], baseThickness, STROKE_COLOR, 1006, drawFolder)
             -- Hidden dark red outline
@@ -4764,11 +4763,7 @@ task.spawn(function()
     for _, obj in ipairs(outlineFrames) do
         tweenService:Create(obj, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
     end
-    -- Also bloom the beautiful new ambient backlights slowly to create a gorgeous aura!
-    for _, glowData in ipairs(ambientGlows) do
-        tweenService:Create(glowData.obj, TweenInfo.new(1.2, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), { BackgroundTransparency = glowData.target }):Play()
-    end
-    task.wait(1.2)
+    task.wait(0.5)
 
     -- 4. Hold for a moment so the user can literally soak in the neon glow
     task.wait(1.5)
@@ -4984,7 +4979,7 @@ function RoseUI:CreateMasterHub(gamesTable)
         HideDefaultTabs = true
     })
     
-    local GalleryTab = HubWin:MakeTab({Name = "Game Gallery"})
+    local GalleryTab = HubWin:MakeTab({Name = "Game Gallery", Icon = "gamepad.png"})
     
     -- Map SafeLaunch closures to the gamesTable
     for _, g in ipairs(gamesTable) do
