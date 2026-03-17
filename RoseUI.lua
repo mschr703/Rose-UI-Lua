@@ -4799,13 +4799,27 @@ end
     end)
 
     if not options.HideDefaultTabs then
-        local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png"})
-        
-        local execName = identifyexecutor and identifyexecutor() or "Unknown Executor"
-        local pName = game:GetService("Players").LocalPlayer and game:GetService("Players").LocalPlayer.Name or "Guest"
-        
-        HomeTab:AddLabel("👋 Hello, " .. pName .. "!")
-        HomeTab:AddLabel("You are currently using: " .. execName)
+        local success, err = pcall(function()
+            local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png"})
+            
+            local execName = "Unknown Executor"
+            pcall(function()
+                if type(identifyexecutor) == "function" then
+                    execName = identifyexecutor()
+                end
+            end)
+            
+            local pName = "Guest"
+            pcall(function()
+                pName = game:GetService("Players").LocalPlayer.Name
+            end)
+            
+            HomeTab:AddLabel("👋 Hello, " .. pName .. "!")
+            HomeTab:AddLabel("You are currently using: " .. execName)
+        end)
+        if not success then
+            warn("[RoseUI] HomeTab Creation Error: " .. tostring(err))
+        end
     end
 
     return WindowObj
