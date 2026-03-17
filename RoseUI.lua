@@ -780,8 +780,8 @@ function RoseUI:CreateWindow(options)
     -- FPS Label and Separator removed by user request
 
     local tabContainer = Instance.new("ScrollingFrame")
-    tabContainer.Size = UDim2.new(1, -10, 1, -115) -- Mehr Platz fuer das Profil unten lassen
-    tabContainer.Position = UDim2.new(0, 5, 0, 50)
+    tabContainer.Size = UDim2.new(1, -10, 1, -125) -- Mehr Platz fuer das Profil unten lassen und Pfeile
+    tabContainer.Position = UDim2.new(0, 5, 0, 15) -- Home Icon bisschen höher ziehen
     tabContainer.BackgroundTransparency = 1
     tabContainer.BorderSizePixel = 0
     tabContainer.ScrollBarThickness = 0 
@@ -793,12 +793,60 @@ function RoseUI:CreateWindow(options)
     tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
     tabLayout.Padding = UDim.new(0, 12) -- Larger Gap between tabs and lines
 
+    -- Scroll Indicators
+    local scrollUpInd = Instance.new("ImageLabel")
+    scrollUpInd.Size = UDim2.new(0, 16, 0, 16)
+    scrollUpInd.Position = UDim2.new(0.5, -8, 0, 2)
+    scrollUpInd.BackgroundTransparency = 1
+    scrollUpInd.Image = "rbxasset://textures/ui/Scroll/scroll-up.png"
+    scrollUpInd.ImageColor3 = Color3.fromRGB(200, 200, 200)
+    scrollUpInd.ImageTransparency = 1
+    scrollUpInd.ZIndex = 4
+    scrollUpInd.Parent = sidebarFrame
+
+    local scrollDownInd = Instance.new("ImageLabel")
+    scrollDownInd.Size = UDim2.new(0, 16, 0, 16)
+    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -108)
+    scrollDownInd.BackgroundTransparency = 1
+    scrollDownInd.Image = "rbxasset://textures/ui/Scroll/scroll-down.png"
+    scrollDownInd.ImageColor3 = Color3.fromRGB(200, 200, 200)
+    scrollDownInd.ImageTransparency = 1
+    scrollDownInd.ZIndex = 4
+    scrollDownInd.Parent = sidebarFrame
+    
+    local function updateScrollIndicators()
+        local cPos = tabContainer.CanvasPosition.Y
+        local windowY = tabContainer.AbsoluteWindowSize.Y
+        local contentY = tabContainer.CanvasSize.Y.Offset
+        
+        if contentY > windowY then
+            if cPos > 5 then
+                tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {ImageTransparency = 0.5}):Play()
+            else
+                tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+            end
+            
+            if cPos + windowY < contentY - 5 then
+                tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {ImageTransparency = 0.5}):Play()
+            else
+                tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+            end
+        else
+            tweenService:Create(scrollUpInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+            tweenService:Create(scrollDownInd, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+        end
+    end
+
+    tabContainer:GetPropertyChangedSignal("CanvasPosition"):Connect(updateScrollIndicators)
+    tabContainer:GetPropertyChangedSignal("CanvasSize"):Connect(updateScrollIndicators)
+    tabContainer:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(updateScrollIndicators)
+
     -- ==========================================
     -- USER PROFILE AREA (Sidebar Unten Links)
     -- ==========================================
     local profileFrame = Instance.new("Frame")
     profileFrame.Size = UDim2.new(1, -10, 0, 50)
-    profileFrame.Position = UDim2.new(0, 5, 1, -55)
+    profileFrame.Position = UDim2.new(0, 5, 1, -65)
     profileFrame.BackgroundTransparency = 1 
     profileFrame.ZIndex = 3
     profileFrame.Parent = sidebarFrame
@@ -4801,6 +4849,12 @@ end
     if not options.HideDefaultTabs then
         local success, err = pcall(function()
             local HomeTab = WindowObj:MakeTab({Name = "Home", Icon = "home.png"})
+            
+            local homeSpacer = Instance.new("Frame")
+            homeSpacer.Size = UDim2.new(1, 0, 0, 35)
+            homeSpacer.BackgroundTransparency = 1
+            homeSpacer.LayoutOrder = 1
+            homeSpacer.Parent = HomeTab.Btn.Parent
             
             local execName = "Unknown Executor"
             pcall(function()
