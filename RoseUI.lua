@@ -795,26 +795,26 @@ function RoseUI:CreateWindow(options)
 
     -- Scroll Indicators
     local scrollUpInd = Instance.new("TextLabel")
-    scrollUpInd.Size = UDim2.new(0, 16, 0, 16)
-    scrollUpInd.Position = UDim2.new(0.5, -8, 0, 6)
+    scrollUpInd.Size = UDim2.new(0, 24, 0, 24)
+    scrollUpInd.Position = UDim2.new(0.5, -12, 0, 5)
     scrollUpInd.BackgroundTransparency = 1
     scrollUpInd.Text = "▲"
-    scrollUpInd.TextColor3 = Color3.fromRGB(255, 60, 60) -- Prominent red
+    scrollUpInd.TextColor3 = Color3.fromRGB(255, 40, 40) -- Extra bright red
     scrollUpInd.TextTransparency = 1
     scrollUpInd.Font = Enum.Font.GothamBold
-    scrollUpInd.TextSize = 20
+    scrollUpInd.TextSize = 24
     scrollUpInd.ZIndex = 4
     scrollUpInd.Parent = sidebarFrame
 
     local scrollDownInd = Instance.new("TextLabel")
-    scrollDownInd.Size = UDim2.new(0, 16, 0, 16)
-    scrollDownInd.Position = UDim2.new(0.5, -8, 1, -100) -- Moved back up slightly
+    scrollDownInd.Size = UDim2.new(0, 24, 0, 24)
+    scrollDownInd.Position = UDim2.new(0.5, -12, 1, -135) -- Pulled much higher above the avatar
     scrollDownInd.BackgroundTransparency = 1
     scrollDownInd.Text = "▼"
-    scrollDownInd.TextColor3 = Color3.fromRGB(255, 60, 60) -- Prominent red
+    scrollDownInd.TextColor3 = Color3.fromRGB(255, 40, 40) -- Extra bright red
     scrollDownInd.TextTransparency = 1
     scrollDownInd.Font = Enum.Font.GothamBold
-    scrollDownInd.TextSize = 20
+    scrollDownInd.TextSize = 24
     scrollDownInd.ZIndex = 4
     scrollDownInd.Parent = sidebarFrame
     
@@ -1348,8 +1348,153 @@ function RoseUI:CreateWindow(options)
             proxyMethod("AddKeybind")
             proxyMethod("AddInventoryGrid")
             proxyMethod("AddPlotGrid")
+            proxyMethod("AddDashboardRow")
             
             return SectionAPI
+        end
+        
+        -- 0.5 DASHBOARD ROW
+        function TabObj:AddDashboardRow(rowOptions)
+            local rowFrame = Instance.new("Frame")
+            rowFrame.Size = UDim2.new(1, -10, 0, 85)
+            rowFrame.BackgroundTransparency = 1
+            rowFrame.ZIndex = 11
+            rowFrame.Parent = page
+            
+            local rowLayout = Instance.new("UIListLayout")
+            rowLayout.Parent = rowFrame
+            rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            rowLayout.FillDirection = Enum.FillDirection.Horizontal
+            rowLayout.Padding = UDim.new(0, 10)
+            
+            -- Left Banner
+            if rowOptions.Banner then
+                local bannerCard = Instance.new("Frame")
+                bannerCard.Size = UDim2.new(0.5, -5, 1, 0)
+                bannerCard.BackgroundColor3 = Color3.fromRGB(30, 15, 25)
+                bannerCard.ClipsDescendants = true
+                bannerCard.ZIndex = 11
+                bannerCard.Parent = rowFrame
+                Instance.new("UICorner", bannerCard).CornerRadius = UDim.new(0, 6)
+                
+                local bgImage = Instance.new("ImageLabel")
+                bgImage.Size = UDim2.new(1, 0, 1, 0)
+                bgImage.BackgroundTransparency = 1
+                bgImage.Image = rowOptions.Banner.Image or "rbxassetid://10459521360"
+                bgImage.ImageColor3 = Color3.fromRGB(180, 150, 255)
+                bgImage.ImageTransparency = 0.4
+                bgImage.ScaleType = Enum.ScaleType.Crop
+                bgImage.ZIndex = 11
+                bgImage.Parent = bannerCard
+                
+                local gradient = Instance.new("UIGradient")
+                gradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(0,0,0)),
+                    ColorSequenceKeypoint.new(1, Color3.new(1,1,1))
+                })
+                gradient.Rotation = 45
+                gradient.Parent = bannerCard
+                
+                local bTitle = Instance.new("TextLabel")
+                bTitle.Size = UDim2.new(1, -20, 0, 20)
+                bTitle.Position = UDim2.new(0, 15, 0, 25)
+                bTitle.BackgroundTransparency = 1
+                bTitle.Text = rowOptions.Banner.Title or "Title"
+                bTitle.TextColor3 = Color3.new(1,1,1)
+                bTitle.Font = Enum.Font.GothamBold
+                bTitle.TextSize = 16
+                bTitle.TextXAlignment = Enum.TextXAlignment.Left
+                bTitle.ZIndex = 12
+                bTitle.Parent = bannerCard
+                
+                local bDesc = Instance.new("TextLabel")
+                bDesc.Size = UDim2.new(1, -20, 0, 15)
+                bDesc.Position = UDim2.new(0, 15, 0, 45)
+                bDesc.BackgroundTransparency = 1
+                bDesc.Text = rowOptions.Banner.Desc or "Description"
+                bDesc.TextColor3 = Color3.fromRGB(200, 180, 220)
+                bDesc.Font = Enum.Font.Gotham
+                bDesc.TextSize = 12
+                bDesc.TextXAlignment = Enum.TextXAlignment.Left
+                bDesc.ZIndex = 12
+                bDesc.Parent = bannerCard
+            end
+            
+            -- Right Ring Card
+            if rowOptions.Ring then
+                local ringCard = Instance.new("Frame")
+                ringCard.Size = UDim2.new(0.5, -5, 1, 0)
+                ringCard.BackgroundColor3 = CARD_COLOR
+                ringCard.ZIndex = 11
+                ringCard.Parent = rowFrame
+                Instance.new("UICorner", ringCard).CornerRadius = UDim.new(0, 6)
+                
+                local ringContainer = Instance.new("Frame")
+                ringContainer.Size = UDim2.new(0, 60, 0, 60)
+                ringContainer.Position = UDim2.new(0, 10, 0.5, -30)
+                ringContainer.BackgroundTransparency = 1
+                ringContainer.ZIndex = 12
+                ringContainer.Parent = ringCard
+                
+                local ringBg = Instance.new("Frame")
+                ringBg.Size = UDim2.new(1, 0, 1, 0)
+                ringBg.BackgroundColor3 = Color3.fromRGB(40, 30, 45)
+                ringBg.ZIndex = 12
+                ringBg.Parent = ringContainer
+                Instance.new("UICorner", ringBg).CornerRadius = UDim.new(1, 0)
+                
+                local ringStroke = Instance.new("UIStroke")
+                ringStroke.Color = Color3.fromRGB(150, 100, 200)
+                ringStroke.Thickness = 5
+                ringStroke.Transparency = 0.5
+                ringStroke.Parent = ringBg
+                
+                local ringNum = Instance.new("TextLabel")
+                ringNum.Size = UDim2.new(1, 0, 0, 20)
+                ringNum.Position = UDim2.new(0, 0, 0.5, -15)
+                ringNum.BackgroundTransparency = 1
+                ringNum.Text = tostring(rowOptions.Ring.Number or "0")
+                ringNum.TextColor3 = Color3.fromRGB(200, 180, 255)
+                ringNum.Font = Enum.Font.GothamBold
+                ringNum.TextSize = 18
+                ringNum.ZIndex = 13
+                ringNum.Parent = ringContainer
+                
+                local ringLbl = Instance.new("TextLabel")
+                ringLbl.Size = UDim2.new(1, 0, 0, 10)
+                ringLbl.Position = UDim2.new(0, 0, 0.5, 5)
+                ringLbl.BackgroundTransparency = 1
+                ringLbl.Text = tostring(rowOptions.Ring.Label or "UNITS")
+                ringLbl.TextColor3 = Color3.fromRGB(140, 120, 160)
+                ringLbl.Font = Enum.Font.GothamBold
+                ringLbl.TextSize = 9
+                ringLbl.ZIndex = 13
+                ringLbl.Parent = ringContainer
+                
+                local rTitle = Instance.new("TextLabel")
+                rTitle.Size = UDim2.new(1, -85, 0, 20)
+                rTitle.Position = UDim2.new(0, 80, 0, 25)
+                rTitle.BackgroundTransparency = 1
+                rTitle.Text = rowOptions.Ring.Title or "Title"
+                rTitle.TextColor3 = Color3.new(1,1,1)
+                rTitle.Font = Enum.Font.GothamBold
+                rTitle.TextSize = 14
+                rTitle.TextXAlignment = Enum.TextXAlignment.Left
+                rTitle.ZIndex = 12
+                rTitle.Parent = ringCard
+                
+                local rDesc = Instance.new("TextLabel")
+                rDesc.Size = UDim2.new(1, -85, 0, 15)
+                rDesc.Position = UDim2.new(0, 80, 0, 45)
+                rDesc.BackgroundTransparency = 1
+                rDesc.Text = rowOptions.Ring.Desc or "Description"
+                rDesc.TextColor3 = Color3.fromRGB(160, 140, 150)
+                rDesc.Font = Enum.Font.Gotham
+                rDesc.TextSize = 11
+                rDesc.TextXAlignment = Enum.TextXAlignment.Left
+                rDesc.ZIndex = 12
+                rDesc.Parent = ringCard
+            end
         end
         
         -- 1. BUTTON
@@ -4871,7 +5016,7 @@ end
             homeLine.Size = UDim2.new(1, -20, 0, 1)
             homeLine.Position = UDim2.new(0, 10, 0, 41) -- Below the Home button in the gap
             homeLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            homeLine.BackgroundTransparency = 0.95
+            homeLine.BackgroundTransparency = 0.85 -- Made slightly more opaque so it is clearly visible
             homeLine.BorderSizePixel = 0
             homeLine.ZIndex = 4
             homeLine.Parent = HomeTab.Btn
@@ -4888,8 +5033,24 @@ end
                 pName = game:GetService("Players").LocalPlayer.Name
             end)
             
-            HomeTab:AddLabel("👋 Hello, " .. pName .. "!")
-            HomeTab:AddLabel("You are currently using: " .. execName)
+            local dayOfWeek = os.date("%A")
+            
+            HomeTab:AddLabel("👋 Greetings, " .. pName .. "!")
+            HomeTab:AddDashboardRow({
+                Banner = {
+                    Title = "Welcome Back",
+                    Desc = "Have a great " .. dayOfWeek .. "!",
+                    Image = "rbxassetid://10459521360" -- Cool fluid purple texture
+                },
+                Ring = {
+                    Title = "Executor",
+                    Desc = "Currently Injected",
+                    Number = "1",
+                    Label = "ACTIVE"
+                }
+            })
+            
+            HomeTab:AddLabel("Executor Detected: " .. execName)
         end)
         if not success then
             warn("[RoseUI] HomeTab Creation Error: " .. tostring(err))
