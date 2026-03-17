@@ -499,32 +499,13 @@ function RoseUI:CreateWindow(options)
         btn.MouseLeave:Connect(function() tweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
         return btn
     end
-
-    local discordBtn = createControlBtn("", 0)
-    
-    local discordIcon = Instance.new("ImageLabel")
-    discordIcon.Size = UDim2.new(0, 16, 0, 16)
-    discordIcon.Position = UDim2.new(0.5, -8, 0.5, -8)
-    discordIcon.BackgroundTransparency = 1
-    discordIcon.ImageColor3 = Color3.fromRGB(255, 180, 190)
-    discordIcon.ScaleType = Enum.ScaleType.Fit
-    discordIcon.ZIndex = 6
-    discordIcon.Parent = discordBtn
-
-    discordBtn.MouseButton1Click:Connect(function()
-        if setclipboard then
-            setclipboard("https://discord.gg/rosehub")
-            RoseUI:Notify({Title = "Discord", Text = "Copied Discord link to clipboard!", Duration = 3})
-        end
-    end)
-    
-    discordBtn.MouseEnter:Connect(function() tweenService:Create(discordIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play() end)
-    discordBtn.MouseLeave:Connect(function() tweenService:Create(discordIcon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(255, 180, 190)}):Play() end)
-
-    local minBtn = createControlBtn("-", 1)
-    local maxBtn = createControlBtn("", 2)
-    
-    local homeBtn = createControlBtn("", 0.5)
+    local closeBtn = createControlBtn("", 0)
+    local maxBtn = createControlBtn("", 1)
+    local minBtn = createControlBtn("-", 2)
+    local homeBtn = createControlBtn("", 3)
+    if Settings.HideDefaultTabs then
+        homeBtn.Visible = false
+    end
     
     local homeIcon = Instance.new("ImageLabel")
     homeIcon.Size = UDim2.new(0, 14, 0, 14)
@@ -552,7 +533,7 @@ function RoseUI:CreateWindow(options)
     maxIcon.ZIndex = 6
     maxIcon.Parent = maxBtn
     
-    local closeBtn = createControlBtn("", 3)
+    -- Note: closeBtn was created above with order 0, maxBtn order 1, minBtn order 2
     
     local closeIcon = Instance.new("ImageLabel")
     closeIcon.Size = UDim2.new(0, 14, 0, 14)
@@ -573,14 +554,6 @@ function RoseUI:CreateWindow(options)
                 end
                 
                 -- Reverting to Standard Cursor per User Request            
-                -- Load Discord / GitHub icon
-                local discordPath = "RoseHub/assets/discordlogo.png"
-                if isfile and not isfile(discordPath) and writefile then
-                    local s, d = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/rosehublua/rosehubimages/main/discordlogo.png") end)
-                    if s and d then writefile(discordPath, d) end
-                end
-                if isfile and isfile(discordPath) then discordIcon.Image = getasset(discordPath) end
-
                 -- Load Tabout icon
                 local taboutPath = "RoseHub/assets/tabout_white.png"
                 if isfile and not isfile(taboutPath) and writefile then
@@ -3733,10 +3706,26 @@ function RoseUI:CreateWindow(options)
                 local thumb = Instance.new("ImageLabel")
                 thumb.Size = UDim2.new(1, 0, 0.65, 0)
                 thumb.BackgroundColor3 = Color3.fromRGB(15, 8, 12)
-                thumb.Image = "rbxassetid://" .. tostring(itemData.Image or "9330663183")
                 thumb.ScaleType = Enum.ScaleType.Crop
                 thumb.ZIndex = currentZ + 3
                 thumb.Parent = card
+                
+                if itemData.Image then
+                    thumb.Image = "rbxassetid://" .. tostring(itemData.Image)
+                elseif itemData.PlaceId then
+                    thumb.Image = "" -- Start empty
+                    task.spawn(function()
+                        pcall(function()
+                            local info = game:GetService("MarketplaceService"):GetProductInfo(itemData.PlaceId)
+                            if info and info.IconImageAssetId then
+                                thumb.Image = "rbxassetid://" .. tostring(info.IconImageAssetId)
+                            end
+                        end)
+                    end)
+                else
+                    thumb.Image = "rbxassetid://9330663183" -- Default fallback
+                end
+                
                 Instance.new("UICorner", thumb).CornerRadius = UDim.new(0, 6)
                 -- Bottom flat corner fix for the thumbnail
                 local botFix = Instance.new("Frame")
