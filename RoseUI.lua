@@ -4644,9 +4644,14 @@ local function drawSegment(pA, pB, thickness, color, zindex, parent, transparenc
     return line, joint
 end
 
-local function fadeOutAll()
+local function fadeOutAll(logoObj)
     local tweens = {}
-    for _, obj in ipairs(screenGui:GetDescendants()) do
+    local objectsToFade = introBg:GetDescendants()
+    if logoObj then
+        table.insert(objectsToFade, logoObj)
+    end
+    
+    for _, obj in ipairs(objectsToFade) do
         local goal = {}
         if obj:IsA("Frame") and obj ~= introBg then
             goal.BackgroundTransparency = 1
@@ -4670,6 +4675,9 @@ local function fadeOutAll()
     end
 
     bgTween.Completed:Wait()
+    if logoObj then
+        logoObj:Destroy()
+    end
 end
 
 task.spawn(function()
@@ -4815,7 +4823,7 @@ task.spawn(function()
     shrinkTween.Completed:Wait()
 
     -- 5. Fade everything out
-    fadeOutAll()
+    fadeOutAll(logo)
     introBg:Destroy()
 
         -- Open main window
